@@ -26,6 +26,8 @@ class Decoder(tf.keras.layers.Layer):
     
     def call(self, x, features, hidden):
     # defining attention as a separate model
+        
+        # input (B)
         context_vector, attention_weights = self.attention(features, hidden)
 
         # x shape after passing through embedding == (batch_size, 1, embedding_dim)
@@ -35,7 +37,7 @@ class Decoder(tf.keras.layers.Layer):
         x = tf.concat([tf.expand_dims(context_vector, 1), x], axis=-1)
 
         # passing the concatenated vector to the GRU
-        output, state = self.gru(x)
+        output, state = self.lstm(x)
 
         # shape == (batch_size, max_length, hidden_size)
         x = self.fc1(output)

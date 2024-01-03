@@ -41,5 +41,8 @@ def create_dataset(path="data/", img_path = "data/processed_imgs/", type="train"
     ds = tf.data.Dataset.from_tensor_slices((img_paths, labels))
     ds = ds.map(lambda x, y: (load_and_preprocess_img(img_path + x), tokenize_label(y, vocab, max_len)))
 
-    return ds.batch(batch_size)
+    return ds.shuffle().batch(batch_size)
+
+
+
 

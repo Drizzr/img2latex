@@ -34,14 +34,21 @@ def resize_image(img, save_path, width, height):
 
     elif img_height / img_width > height / width:
         new_width = img_height * width / height
-        pad = (new_width - img_height)
+        pad = (new_width - img_height) / 2
         img_padded= cv2.copyMakeBorder(img, 0, 0 , math.ceil(pad),math.floor(pad), cv2.BORDER_CONSTANT, value=[255, 255, 255])
 
     else:
         img_padded = img
 
-    img_rescaled = img_padded #img_padded / (255 / 2) - 1 # Rescale to [-1, 1]
-    img_resize = cv2.resize(img_rescaled, [width, height])
-    cv2.imwrite(save_path, img_resize)
 
 
+
+
+test_data=pd.read_csv('archive/im2latex_test.csv')
+train_data=pd.read_csv('archive/im2latex_train.csv')
+val_data=pd.read_csv('archive/im2latex_validate.csv')
+
+
+for image in test_data['image']:
+    crop_image('archive/formula_images_processed/formula_images_processed/'+image,'text.png')
+    resize_image('text.png','data/preprocessed_imgs'+image,128,32)

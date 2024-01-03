@@ -9,6 +9,7 @@ class Encoder(tf.keras.layers.Layer):
 
         
         self.conv1 = tf.keras.layers.Conv2D(filters = 64, kernel_size = (3, 3), activation='relu', padding='same')
+        
         self.maxpool1 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), strides=2)
         self.conv2 = tf.keras.layers.Conv2D(filters = 128, kernel_size = (3, 3), activation='relu', padding='same')
         self.maxpool2 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), strides=2)
