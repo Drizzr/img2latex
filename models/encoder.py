@@ -2,6 +2,7 @@ import tensorflow as tf
 
 
 class Encoder(tf.keras.layers.Layer):
+    # The convolutional encoder is almost always of this structure
 
     def __init__(self, embedding_dim):
         super(Encoder, self).__init__()
@@ -28,6 +29,7 @@ class Encoder(tf.keras.layers.Layer):
         self.dropout = tf.keras.layers.Dropout(0.5)
 
     def call(self, x):
+        # input size (batch_size, WIDTH, HEIGHT) in our case (batch_size, 480, 96)
         x = self.conv1(x)
         x = self.maxpool1(x)
         x = self.conv2(x)
