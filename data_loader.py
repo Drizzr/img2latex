@@ -30,16 +30,22 @@ def tokenize_label(label, vocab, max_len):
     
     return np.array(tokenize_formula)
 
+def strArrayToNumpyArray(strArray):
+    #takes an string in the form "[1, 2, 3]" and returns a numpy array
+    strArray = strArray.replace("[", "")
+    strArray = strArray.replace("]", "")
+    strArray = strArray.replace(" ", "")
+    return np.array(strArray.split(","), dtype=np.int32)
 
-def create_dataset(path="data/", img_path = "data/processed_imgs/", type="train", batch_size=32, max_len=150, vocab=None):
+def create_dataset(path="data/tokenized_data/", img_path = "data/preprocessed_imgs/", type="train", batch_size=32, max_len=150, vocab=None):
 
-    df = pd.read_csv("data/im2latex_"+type+".csv")
-    img_paths = df["img_path"].values
+    df = pd.read_csv(path + "im2latex_"+type+"_tokenized.csv", delimiter=";")
+    img_paths = df["image_path"].values
     labels = df["formula"].values
 
 
     ds = tf.data.Dataset.from_tensor_slices((img_paths, labels))
-    ds = ds.map(lambda x, y: (load_and_preprocess_img(img_path + x), tokenize_label(y, vocab, max_len)))
+    ds = ds.map(lambda x, y: (load_and_preprocess_img(img_path + x), strArrayToNumpyArray(y)))
 
     return ds.shuffle().batch(batch_size)
 

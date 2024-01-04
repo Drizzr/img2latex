@@ -38,7 +38,8 @@ stoi = create_stoi(vocabFile.readlines())
 for dataset in datasets:
     df = pd.read_csv(dataFilesPath + dataset + ".csv")
 
-    with open(dataFilesPath + "tokenized_data/" + dataset + "_tokenized.txt", "w") as file:
+    with open(dataFilesPath + "tokenized_data/" + dataset + "_tokenized.csv", "w") as file:
+        file.write("formula,image_path\n")
         for _ , row  in df.iterrows():
                 tokenize_formula = []
                 formula = str(row["formula"]).strip("\n").split()
@@ -75,7 +76,7 @@ for dataset in datasets:
                     
                 totalFormulas += 1
             
-                file.write(str(tokenize_formula) + "," + row["image"] + "\n")
+                file.write(str(tokenize_formula) + ";" + row["image"] + "\n")
 
 longestFormula = max(formularTokenLengths)
 
