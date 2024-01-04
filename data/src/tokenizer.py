@@ -75,7 +75,7 @@ for dataset in datasets:
                     
                 totalFormulas += 1
             
-                file.write(row["image"] + "§" + str(tokenize_formula) + "\n")
+                file.write(str(tokenize_formula) + "," + row["image"] + "\n")
 
 longestFormula = max(formularTokenLengths)
 
