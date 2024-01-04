@@ -71,8 +71,10 @@ def write_vocab(vocab, filename):
 
 class Vocabulary:
 
-    def __init__(self, tokens, vocab_file_path):
-        self.tokens = tokens
+    # class to load and store vocabulary
+
+    def __init__(self, vocab_file_path):
+
         self.path = vocab_file_path
         self.load_vocab()
 
@@ -92,4 +94,6 @@ class Vocabulary:
 
 
 
-write_vocab(build_vocab(min_freq=3), "data/vocab.txt")
+if __name__ == "__main__":
+    # logic to build the voacabulary and save it to a file
+    write_vocab(build_vocab(min_freq=3), "data/vocab.txt")
