@@ -1,6 +1,6 @@
 import tensorflow as tf
-from models.encoder import Encoder
-from models.decoder import Decoder
+from model.encoder import Encoder
+from model.decoder import Decoder
 
 class Img2LaTex(tf.keras.Model):
     def __init__(self, embedding_dim, units, vocab_size):
