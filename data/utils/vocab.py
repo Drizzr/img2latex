@@ -1,6 +1,7 @@
 
 from collections import Counter
 import pandas as pd
+import regex as re
 
 
 def build_vocab(datasets=["train", "test", "validate"], min_freq=1, specials=['<pad>', '<unk>', "<eos>", "<sos>"], path="data/"):
@@ -25,6 +26,23 @@ def build_vocab(datasets=["train", "test", "validate"], min_freq=1, specials=['<
     tokens = sorted([token for token, freq in c.items() if freq >= min_freq])
     tokens = specials + tokens
     print("- done. {}/{} tokens added to vocab.".format(len(tokens), len(c) + len(specials)))
+    
+    #Cleaning up longer numbers like 0.0 123 41.245
+    print("Cleaning up tokens...")
+    regexDecimalValue = re.compile(r'\b\d+.\d+\b')
+    regexBigNumber = re.compile(r'\b\d{2,}\b')
+    
+    removeTokens = []
+    for i in range(len(tokens)):
+        token = tokens[i]
+        if(regexDecimalValue.match(token) or regexBigNumber.match(token)):
+            #remove token
+            print("Removing token: " + token)
+            removeTokens.append(token)
+            
+    for token in removeTokens:
+        tokens.remove(token)
+    print("- done. {}/{} tokens removed from vocab.".format(len(removeTokens), len(tokens) + len(removeTokens)))
     return tokens
 
 
@@ -78,4 +96,4 @@ class Vocabulary:
 
 if __name__ == "__main__":
     # logic to build the voacabulary and save it to a file
-    write_vocab(build_vocab(min_freq=10), "data/vocab.txt")
+    write_vocab(build_vocab(min_freq=3), "data/vocab.txt")
