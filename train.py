@@ -1,85 +1,91 @@
-from models import CNN_Encoder, RNN_Decoder
-from data.utils import load_image, calc_max_length, map_func, load_data
-import tensorflow as tf
+import argparse
+from data.utils.vocab import Vocabulary
 from data_loader import create_dataset
-import time
+from model import Img2LaTex_model, Trainer
+import tensorflow as tf
 
 
-embedding_dim = 256
-units = 512
-vocab_size = vocab_size
-num_steps = len(train_X) // BATCH_SIZE
-# Shape of the vector extracted from InceptionV3 is (64, 2048)
-# These two variables represent that vector shape
-features_shape = 2048
-attention_features_shape = 64
+def build_model(model):
+    # generate input to call method
+    x = tf.random.uniform((1, 480, 96, 1))
+    formula = tf.random.uniform((1, 150))
 
-encoder = CNN_Encoder(embedding_dim)
-decoder = RNN_Decoder(embedding_dim, units, vocab_size)
+    return model
 
-optimizer = tf.keras.optimizers.Adam()
-loss_object = tf.keras.losses.SparseCategoricalCrossentropy(
-    from_logits=True, reduction='none')
+def main():
 
-def loss_function(real, pred):
-  mask = tf.math.logical_not(tf.math.equal(real, 0))
-  loss_ = loss_object(real, pred)
+    # get args
+    parser = argparse.ArgumentParser(description="Train the model.")
 
-  mask = tf.cast(mask, dtype=loss_.dtype)
-  loss_ *= mask
+    # model args
+    parser.add_argument("--embedding_dim", type=int, default=80)
 
-  return tf.reduce_mean(loss_)
+    parser.add_argument("--lstm_rnn_h", type=int, default=512, help="size of the lstm hidden state")
 
-loss_plot = []
-@tf.function
-def train_step(img_tensor, target):
-  loss = 0
+    parser.add_argument("--enc_out_dim", type=int, default=512, help="size of the encoder output")
 
-  # initializing the hidden state for each batch
-  # because the captions are not related from image to image
-  hidden = decoder.reset_state(batch_size=target.shape[0])
+    parser.add_argument("--max_len", type=int, default=512, help="size of the token length")
 
-  dec_input = tf.expand_dims([tokenizer.word_index['startseq']] * target.shape[0], 1)
+    parser.add_argument("--dropout", type=float, default=0.5, help="dropout rate")
 
-  with tf.GradientTape() as tape:
-      features = encoder(img_tensor)
+    parser.add_argument("--num_epochs", type=int, default=15, help="number of epochs")
 
-      for i in range(1, target.shape[1]):
-          # passing the features through the decoder
-          predictions, hidden, _ = decoder(dec_input, features, hidden)
+    parser.add_argument("--batch_size", type=int, default=1)
 
-          loss += loss_function(target[:, i], predictions)
+    parser.add_argument("--print_freq", type=int, default=100)
 
-          # using teacher forcing
-          dec_input = tf.expand_dims(target[:, i], 1)
+    parser.add_argument("--sample_method", type=str, default="teacher_forcing",
+                        choices=('teacher_forcing', 'exp', 'inv_sigmoid'),
+                        help="The method to schedule sampling")
+    
+    parser.add_argument("--decay_k", type=float, default=0.002,)
 
-  total_loss = (loss / int(target.shape[1]))
 
-  trainable_variables = encoder.trainable_variables + decoder.trainable_variables
+    parser.add_argument("--from_check_point", action='store_true',
+                        default=False, help="Training from checkpoint or not")
+    
+    parser.add_argument("--clip", type=float, default=5.0, help="gradient clipping")
 
-  gradients = tape.gradient(loss, trainable_variables)
+    parser.add_argument("--lr", type=float, default=0.001, help="learning rate")
 
-  optimizer.apply_gradients(zip(gradients, trainable_variables))
+    parser.add_argument("--lr_decay", type=float, default=0.5, help="learning rate decay")
 
-  return loss, total_loss
+    
 
-import time
-start_epoch = 0
-EPOCHS = 20
+    args = parser.parse_args()
 
-for epoch in range(start_epoch, EPOCHS):
-    start = time.time()
-    total_loss = 0
+    from_check_point = args.from_check_point
+    
+    if from_check_point:
+        pass # implement load from checkpoint
 
-    for (batch, (img_tensor, target)) in enumerate(dataset):
-        batch_loss, t_loss = train_step(img_tensor, target)
-        total_loss += t_loss
+    print("training args: ", args)
 
-        if batch % 100 == 0:
-            average_batch_loss = batch_loss.numpy()/int(target.shape[1])
-            print(f'Epoch {epoch+1} Batch {batch} Loss {average_batch_loss:.4f}')
-    # storing the epoch end loss value to plot later
-    loss_plot.append(total_loss / num_steps)
+    # load vocab
+    vocab = Vocabulary("data/vocab.txt")
 
-    print(f'Epoch {epoch+1} Loss {total_loss/num_steps:.6f}')
-    print(f'Time taken for 1 epoch {time.time()-start:.2f} sec\n')
+    vocab_size = vocab.n_tokens
+
+    dataset = create_dataset(batch_size=args.batch_size, vocab=vocab, type="train", max_len=args.max_len)
+    
+
+    print("construct dataset...")
+
+    model = Img2LaTex_model(args.embedding_dim, args.lstm_rnn_h, vocab_size, args.enc_out_dim, args.max_len, args.dropout)
+
+    model = build_model(model)
+
+    print("model built...")
+
+    trainer = Trainer(model, dataset, args)
+
+    trainer.train()
+
+
+
+if __name__ == "__main__":
+    main()
+
+
+
+

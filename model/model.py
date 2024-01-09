@@ -1,54 +1,56 @@
 import tensorflow as tf
+from tensorflow import keras
 
 
-class Img2LaTex_model(tf.keras.Model):
+class Img2LaTex_model(keras.Model):
     def __init__(self, embedding_dim, dec_lstm_h, vocab_size, enc_out_dim=512 ,dropout=0.5):
         
+        super().__init__()
 
-        self.cnn_encoder = tf.Keras.sequential([   # using sequential automatically forwars the input to the next layer
+        self.cnn_encoder = keras.Sequential([   # using sequential automatically forwars the input to the next layer
                 # input size: [B, W, H, C] in our case [Batch_size, 480, 96, 1]
-                tf.keras.layers.Conv2D(filters = 64, kernel_size = (3, 3), activation='relu', padding='same'),
+                keras.layers.Conv2D(filters = 64, kernel_size = (3, 3), activation='relu', padding='same'),
                 # (batch_size, 480, 96, 64)
-                tf.keras.layers.MaxPooling2D(pool_size=(2, 2), strides=2),
+                keras.layers.MaxPooling2D(pool_size=(2, 2), strides=2),
                 # (batch_size, 240, 48, 64)
-                tf.keras.layers.Conv2D(filters = 128, kernel_size = (3, 3), activation='relu', padding='same'),
+                keras.layers.Conv2D(filters = 128, kernel_size = (3, 3), activation='relu', padding='same'),
                 # (batch_size, 240, 48, 128)
-                tf.keras.layers.MaxPooling2D(pool_size=(2, 2), strides=2),
+                keras.layers.MaxPooling2D(pool_size=(2, 2), strides=2),
                 # (batch_size, 120, 24, 128)
-                tf.keras.layers.Conv2D(filters = 256, kernel_size = (3, 3), activation='relu', padding='same'),
+                keras.layers.Conv2D(filters = 256, kernel_size = (3, 3), activation='relu', padding='same'),
                 # (batch_size, 120, 24, 256)
-                tf.keras.layers.MaxPooling2D(pool_size=(2, 2), strides=2),
+                keras.layers.MaxPooling2D(pool_size=(2, 2), strides=2),
                 # (batch_size, 60, 12, 256)
-                tf.keras.layers.Conv2D(filters = enc_out_dim, kernel_size = (3, 3), activation='relu', padding='same'),
+                keras.layers.Conv2D(filters = enc_out_dim, kernel_size = (3, 3), activation='relu', padding='same'),
                 # (batch_size, 60, 12, 256)
-                tf.keras.layers.MaxPooling2D(pool_size=(2, 1))
+                keras.layers.MaxPooling2D(pool_size=(2, 1))
                 # (batch_size, 30, 12, 256)
             ])
         # -> output shape: (batch_size, 60, 24, enc_out_dim) or more generally (batch_size, W', H', enc_out_dim)
 
 
 
-        #self.bi_lstm = tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(256, return_sequences=True, return_state=True))
+        #self.bi_lstm = keras.layers.Bidirectional(keras.layers.LSTM(256, return_sequences=True, return_state=True))
 
-        self.dropout = tf.keras.layers.Dropout(dropout)
+        self.dropout = keras.layers.Dropout(dropout)
         
-        self.embedding = tf.keras.layers.Embedding(vocab_size, embedding_dim)
+        self.embedding = keras.layers.Embedding(vocab_size, embedding_dim)
 
-        self.rnn_decoder = tf.keras.layers.LSTM(dec_lstm_h, return_sequences=True, return_state=True)
+        self.rnn_decoder = keras.layers.LSTMCell(dec_lstm_h)
 
         # bandhau attention
-        self.W1 = tf.keras.layers.Dense(dec_lstm_h)
-        self.W2 = tf.keras.layers.Dense(dec_lstm_h)
-        self.V = tf.keras.layers.Dense(1)
+        self.W1 = keras.layers.Dense(dec_lstm_h)
+        self.W2 = keras.layers.Dense(dec_lstm_h)
+        self.V = keras.layers.Dense(1)
 
-        self.W_out = tf.keras.layers.Dense(vocab_size, activation="softmax")
+        self.W_out = keras.layers.Dense(vocab_size, activation="softmax")
 
         # init decoder states
-        self.init_wh = tf.keras.layers.Dense(dec_lstm_h, activation="tanh")
-        self.init_wc = tf.keras.layers.Dense(dec_lstm_h, activation="tanh")
-        self.init_w_context = tf.keras.layers.Dense(dec_lstm_h, activation="tanh")
+        self.init_wh = keras.layers.Dense(dec_lstm_h, activation="tanh")
+        self.init_wc = keras.layers.Dense(dec_lstm_h, activation="tanh")
+        self.init_w_context = keras.layers.Dense(dec_lstm_h, activation="tanh")
         
-    def forward(self, imgs, formulas, epsilon=1.0):
+    def call(self, imgs, formulas, epsilon=1.0):
         """
         imgs: [B, W, H, C] in our case [Batch_size, 480, 96, 1]
         
@@ -61,7 +63,8 @@ class Img2LaTex_model(tf.keras.Model):
         
         encoded_imgs = self.encode(imgs) # -> (batch_size, 360, 512)
         dec_states, context_t = self.init_decoder(encoded_imgs) # calc hidden States and attention for the first time step
-        max_len = formulas.size(1) # this enables us to only consider the max_token length for each batch and not globaly
+        max_len = formulas.get_shape()[1] # this enables us to only consider the max_token length for each batch and not globaly
+        
         logits = []
 
         for t in range(max_len):
@@ -76,7 +79,7 @@ class Img2LaTex_model(tf.keras.Model):
                 dec_states, context_t, encoded_imgs, tgt)
             logits.append(logit)
 
-            logits = tf.stack(logits, dim=1) # -> (batch_size, max_len, vocab_size)
+            logits = tf.stack(logits, axis=1) # -> (batch_size, max_len, vocab_size)
 
             return logits
     
@@ -91,9 +94,9 @@ class Img2LaTex_model(tf.keras.Model):
         """
         embedded = self.embedding(tgt) # -> (batch_size, 1, embedding_dim)
 
-        prev_y = tf.squeeze(embedded)  # -> (batch_size, embedding_dim)
+        prev_y = tf.squeeze(embedded, 1)  # -> (batch_size, embedding_dim)
 
-        inp = tf.concat([prev_y, context], dim=1)  # -> (B, emb_size+dec_lstm_h)
+        inp = tf.concat([prev_y, context], axis=1)  # -> (B, emb_size+dec_lstm_h)
         h_t, c_t = self.rnn_decoder(inp, dec_states)  # h_t:[B, dec_lstm_h]
         h_t = self.dropout(h_t)
         c_t = self.dropout(c_t) # prevent overfitting
@@ -115,7 +118,7 @@ class Img2LaTex_model(tf.keras.Model):
 
         # flatten last two dimensions
         B, W, H, C = x.shape
-        x = self.keras.layers.Reshape((B, W*H, C))(x)
+        x = tf.reshape(x, (B, W*H, C))
         # -> output shape: (batch_size, W' * H' , enc_out_dim)
 
         #x = self.bi_lstm(x)
@@ -155,12 +158,31 @@ class Img2LaTex_model(tf.keras.Model):
             enc_out: the output of row encoder [B, H*W, C]
           return:
             h_0, c_0:  h_0 and c_0's shape: [B, dec_rnn_h]
-            init_O : the average of enc_out  [B, dec_rnn_h]
+            init_context : the average of enc_out  [B, dec_rnn_h]
             for decoder
         """
-        mean_enc_out = enc_out.mean(dim=1)
-        h = self._init_h(mean_enc_out)
-        c = self._init_c(mean_enc_out)
-        init_context = self._init_o(mean_enc_out)
+        mean_enc_out = tf.math.reduce_mean(enc_out, axis=1)   
+        h = self.init_wh(mean_enc_out)
+        c = self.init_wc(mean_enc_out)
+        init_context = self.init_w_context(mean_enc_out)
         return (h, c), init_context
 
+    def build_graph(self, raw_shape):
+        x = keras.Input(shape=raw_shape, batch_size=1)
+        formula = keras.Input(shape=(150,), batch_size=1)
+        return keras.Model(inputs=[x, formula], outputs=self.call(x, formula))
+    
+
+
+if __name__ == "__main__":
+    raw_input = (480, 96, 1)
+    model = Img2LaTex_model(80, 512, 500)
+    model.build_graph(raw_input).summary()
+
+    """model = Img2LaTex_model(80, 512, 500)
+
+    output = model(tf.ones((1, 480, 96, 1)), tf.ones((1, 150)))
+
+    model.summary()"""
+
+    
