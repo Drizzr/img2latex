@@ -1,2 +1,2 @@
-from .decoder import Decoder, BahdanauAttention
-from .encoder import Encoder
+from .model import Img2LaTex_model
+from .training import Trainer

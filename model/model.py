@@ -118,9 +118,7 @@ class Img2LaTex_model(keras.Model):
 
         # flatten last two dimensions
         B, W, H, C = x.shape
-        print(x.shape)
         x = tf.reshape(x, (B, W*H, C))
-        print(x.shape)
         # -> output shape: (batch_size, W' * H' , enc_out_dim)
 
         #x = self.bi_lstm(x)
@@ -160,7 +158,7 @@ class Img2LaTex_model(keras.Model):
             enc_out: the output of row encoder [B, H*W, C]
           return:
             h_0, c_0:  h_0 and c_0's shape: [B, dec_rnn_h]
-            init_O : the average of enc_out  [B, dec_rnn_h]
+            init_context : the average of enc_out  [B, dec_rnn_h]
             for decoder
         """
         mean_enc_out = tf.math.reduce_mean(enc_out, axis=1)   
@@ -171,14 +169,20 @@ class Img2LaTex_model(keras.Model):
 
     def build_graph(self, raw_shape):
         x = keras.Input(shape=raw_shape, batch_size=1)
-        formula = keras.Input(shape=(500,), batch_size=1)
+        formula = keras.Input(shape=(150,), batch_size=1)
         return keras.Model(inputs=[x, formula], outputs=self.call(x, formula))
     
 
 
 if __name__ == "__main__":
     raw_input = (480, 96, 1)
-    model = Img2LaTex_model(512, 512, 500)
+    model = Img2LaTex_model(80, 512, 500)
     model.build_graph(raw_input).summary()
+
+    """model = Img2LaTex_model(80, 512, 500)
+
+    output = model(tf.ones((1, 480, 96, 1)), tf.ones((1, 150)))
+
+    model.summary()"""
 
     
