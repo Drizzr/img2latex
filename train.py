@@ -3,14 +3,16 @@ from data.utils.vocab import Vocabulary
 from data_loader import create_dataset
 from model import Img2LaTex_model, Trainer
 import tensorflow as tf
-import pprint
+import time
 
 
 def build_model(model):
     # generate input to call method
+    start_time = time.time()
     x = tf.random.uniform((1, 480, 96, 1))
     formula = tf.random.uniform((1, 150))
     model(x, formula)
+    print("time to build model: ", time.time() - start_time)
     return model
 
 def main():
@@ -33,7 +35,7 @@ def main():
 
     parser.add_argument("--batch_size", type=int, default=2)
 
-    parser.add_argument("--print_freq", type=int, default=100)
+    parser.add_argument("--print_freq", type=int, default=1)
 
     parser.add_argument("--sample_method", type=str, default="exp",
                         choices=('exp', 'inv_sigmoid'),

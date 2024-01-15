@@ -1,11 +1,12 @@
 import os
 import tensorflow as tf
 import math
+import numpy as np
 
 class Trainer(object):
     def __init__(self, model,
                  dataset, args,
-                 init_epoch=1, last_epoch=15, optimizer=tf.keras.optimizers.legacy.Adam(learning_rate=0.001)):
+                 init_epoch=1, last_epoch=15, optimizer=tf.keras.optimizers.Adam(learning_rate=0.001)):
 
         self.optimizer = optimizer
         self.model = model
@@ -29,10 +30,31 @@ class Trainer(object):
         while self.epoch <= self.last_epoch:
             losses = 0.0
 
-            for  _, (imgs, target) in enumerate(self.dataset):
+            for imgs, target in self.dataset:
                 
+                tgt4training = target[:, :-1] # remove <eos>
+                tgt4cal_loss = target[:, 1:] # remove <sos>
 
-                step_loss = self.train_step(imgs, target)
+                epsilon = self.cal_epsilon(
+                self.args.decay_k, self.total_step, self.args.sample_method)
+                
+                with tf.GradientTape() as tape:
+                    logits = self.model(imgs, tgt4training, epsilon, training=True) # -> (batch_size, max_len, vocab_size)
+                    tgt4cal_loss = tf.one_hot(tf.cast(tgt4cal_loss, dtype=tf.int32), axis=-1, depth=logits.shape[-1])
+            
+                    # calculate loss
+                    step_loss = self.loss_fn(tgt4cal_loss, logits)
+                    grads = tape.gradient(step_loss, self.model.trainable_weights)
+
+                    if self.args.clip > 0:
+                        grads, _ = tf.clip_by_global_norm(grads, self.args.clip)
+                    self.optimizer.apply_gradients(zip(grads, self.model.trainable_weights))
+
+                    self.step += 1
+                    self.total_step += 1
+                    
+
+                
                 losses += step_loss
 
                 # log message
@@ -54,29 +76,6 @@ class Trainer(object):
             self.save_model('ckpt-{}-{:.4f}'.format(self.epoch, val_loss))
             self.epoch += 1
             self.step = 0
-
-    @tf.function
-    def train_step(self, imgs, target):
-        with tf.GradientTape() as tape:
-            tgt4training = target[:, :-1] # remove <eos>
-            tgt4cal_loss = target[:, 1:] # remove <sos>
-
-            epsilon = self.cal_epsilon(
-                self.args.decay_k, self.total_step, self.args.sample_method)
-            logits = self.model(imgs, tgt4training, epsilon, training=True)
-            print(logits.shape)
-            print(tgt4cal_loss.shape)
-            # calculate loss
-            loss = self.loss_fn(tgt4cal_loss, logits)
-            grads = tape.gradient(loss, self.model.trainable_variables)
-            if self.args.clip > 0:
-                grads, _ = tf.clip_by_global_norm(grads, self.args.clip)
-            self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
-
-            self.step += 1
-            self.total_step += 1
-
-        return loss.item()
 
     def validate(self):
 

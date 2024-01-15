@@ -70,9 +70,12 @@ class Img2LaTex_model(keras.Model):
         for t in range(max_len):
             tgt = formulas[:, t:t+1] # -> (batch_size, 1)
 
+            
+
             # we only use teacher for a subset of the data and for the rest we use the predicted token, this is called scheduled sampling and can be adjusted via epsilon
             if logits and tf.random.uniform((), 0, 1) > epsilon:
-                tgt = tf.cast(tf.argmax(tf.math.log(logits[-1]), axis=1), dtype=tf.float32)
+
+                tgt = tf.expand_dims(tf.math.argmax(logits[-1], axis=1), 1)
 
         # initialize hidden and cell states of lstm
             dec_states, context_t, logit = self.step_decoding(
@@ -94,8 +97,8 @@ class Img2LaTex_model(keras.Model):
         o_t: attention generated from the previous step
 
         """
-        embedded = self.embedding(tgt) # -> (batch_size, 1, embedding_dim)
 
+        embedded = self.embedding(tgt) # -> (batch_size, 1, embedding_dim)
         prev_y = tf.squeeze(embedded, 1)  # -> (batch_size, embedding_dim)
         inp = tf.concat([prev_y, context], axis=1)  # -> (B, emb_size+dec_lstm_h)
         _ , (h_t, c_t) = self.rnn_decoder(inp, dec_states)  # h_t:[B, dec_lstm_h]

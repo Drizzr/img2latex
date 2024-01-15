@@ -26,9 +26,13 @@ def create_dataset(path="data/tokenized_data/", img_path = "data/preprocessed_im
 
 
     ds = tf.data.Dataset.from_tensor_slices((img_paths, labels))
-    ds = ds.map(lambda x, y: (load_and_preprocess_img(img_path + x), strArrayToNumpyArray(y)))
 
-    return ds.shuffle(32000).batch(batch_size)
+    
+
+    ds = ds.map(lambda x, y: (load_and_preprocess_img(img_path + x), strArrayToNumpyArray(y)))
+    ds = ds.shuffle(32000).batch(batch_size)
+
+    return ds
 
 
 
