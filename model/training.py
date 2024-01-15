@@ -26,7 +26,7 @@ class Trainer(object):
 
     def train(self):
         mes = "Epoch {}, step:{}/{} {:.2f}%, Loss:{:.4f}, Perplexity:{:.4f}"
-        print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
+        print("Num GPUs Available 👀: ", len(tf.config.list_physical_devices('GPU')))
         while self.epoch <= self.last_epoch:
             losses = 0.0
 

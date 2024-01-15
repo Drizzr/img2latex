@@ -1,7 +1,7 @@
 import argparse
 from data.utils.vocab import Vocabulary
 from data_loader import create_dataset
-from model import Img2LaTex_model, Trainer
+from model import Img2LaTex_model, Trainer, LatexProducer
 import tensorflow as tf
 import time
 
@@ -12,6 +12,7 @@ def build_model(model, formula_len):
     x = tf.random.uniform((1, 480, 96, 1))
     formula = tf.random.uniform((1, formula_len))
     model(x, formula)
+    print("successfully built model...")
     print("time to build model: ", time.time() - start_time)
     return model
 
@@ -41,7 +42,7 @@ def main():
                         choices=('exp', 'inv_sigmoid', "teacher_forcing"),
                         help="The method to schedule sampling")
     
-    parser.add_argument("--decay_k", type=float, default=0.002,)
+    parser.add_argument("--decay_k", type=float, default=0.002,) 
 
 
     parser.add_argument("--from_check_point", action='store_true',
@@ -62,9 +63,11 @@ def main():
     if from_check_point:
         pass # implement load from checkpoint
     
-    print("------------------------------------------")
-    print("training args: ", args)
-    print("------------------------------------------")
+    print("_________________________________________________________________")
+    print("HYPERPARAMETERS: ")
+    for arg in vars(args):
+        print(arg,": ", getattr(args, arg))
+    print("_________________________________________________________________")
     # load vocab
     vocab = Vocabulary("data/vocab.txt")
 
@@ -74,11 +77,11 @@ def main():
 
     dataset2 = create_dataset(batch_size=1, vocab=vocab, type="train")
 
-    for element in dataset2:
+    """for element in dataset2:
         if element[1].shape[1] != 152:
             print("found one")
     
-    print(vocab_size)
+    print(vocab_size)"""
         
     
 
@@ -88,15 +91,16 @@ def main():
 
     model = build_model(model, 152)
 
+    #prod = LatexProducer(model, vocab)
 
-    print("successfully built model...")
+    #print(prod._greedy_decoding(tf.random.uniform((1, 480, 96, 1))))
 
-    print("------------------------------------------")
-    print("model summary: ")
+    print("_________________________________________________________________")
+    print("MODEL SUMMARY 🍆: ")
     model.summary()
-    print("------------------------------------------")
-    print("begin training...")
-    print("------------------------------------------")
+
+    print("begin training... 🥵")
+    print("_________________________________________________________________")
 
 
     trainer = Trainer(model, dataset, args)
