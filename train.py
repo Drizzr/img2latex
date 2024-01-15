@@ -100,6 +100,7 @@ def main():
     model.summary()
 
     print("begin training... 🥵")
+    print(f"expected loss for random guessing: {-tf.math.log(1/vocab_size)}")
     print("_________________________________________________________________")
 
 

@@ -32,6 +32,7 @@ class Trainer(object):
 
             for imgs, target in self.dataset:
                 
+    
                 tgt4training = target[:, :-1] # remove <eos>
                 tgt4cal_loss = target[:, 1:] # remove <sos>
 
@@ -44,11 +45,11 @@ class Trainer(object):
             
                     # calculate loss
                     step_loss = self.loss_fn(tgt4cal_loss, logits)
-                    grads = tape.gradient(step_loss, self.model.trainable_weights)
+                    grads = tape.gradient(step_loss, self.model.trainable_variables)
 
                     if self.args.clip > 0:
                         grads, _ = tf.clip_by_global_norm(grads, self.args.clip)
-                    self.optimizer.apply_gradients(zip(grads, self.model.trainable_weights))
+                    self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
 
                     self.step += 1
                     self.total_step += 1

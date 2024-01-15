@@ -100,7 +100,7 @@ class Img2LaTex_model(keras.Model):
 
         embedded = self.embedding(tgt) # -> (batch_size, 1, embedding_dim)
         prev_y = tf.squeeze(embedded, 1)  # -> (batch_size, embedding_dim)
-        inp = tf.concat([prev_y, context], axis=1)  # -> (B, emb_size+dec_lstm_h)
+        inp =  tf.concat([prev_y, context], axis=1)  # -> (B, emb_size+dec_lstm_h)
         _ , (h_t, c_t) = self.rnn_decoder(inp, dec_states)  # h_t:[B, dec_lstm_h]
 
 
