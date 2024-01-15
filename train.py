@@ -6,11 +6,11 @@ import tensorflow as tf
 import time
 
 
-def build_model(model):
+def build_model(model, formula_len):
     # generate input to call method
     start_time = time.time()
     x = tf.random.uniform((1, 480, 96, 1))
-    formula = tf.random.uniform((1, 150))
+    formula = tf.random.uniform((1, formula_len))
     model(x, formula)
     print("time to build model: ", time.time() - start_time)
     return model
@@ -23,9 +23,9 @@ def main():
     # model args
     parser.add_argument("--embedding_dim", type=int, default=80)
 
-    parser.add_argument("--lstm_rnn_h", type=int, default=512, help="size of the lstm hidden state")
+    parser.add_argument("--lstm_rnn_h", type=int, default=64, help="size of the lstm hidden state")
 
-    parser.add_argument("--enc_out_dim", type=int, default=512, help="size of the encoder output")
+    parser.add_argument("--enc_out_dim", type=int, default=64, help="size of the encoder output")
 
     parser.add_argument("--max_len", type=int, default=512, help="size of the token length")
 
@@ -33,7 +33,7 @@ def main():
 
     parser.add_argument("--num_epochs", type=int, default=15, help="number of epochs")
 
-    parser.add_argument("--batch_size", type=int, default=2)
+    parser.add_argument("--batch_size", type=int, default=12)
 
     parser.add_argument("--print_freq", type=int, default=1)
 
@@ -71,13 +71,22 @@ def main():
     vocab_size = vocab.n_tokens
 
     dataset = create_dataset(batch_size=args.batch_size, vocab=vocab, type="train")
+
+    dataset2 = create_dataset(batch_size=1, vocab=vocab, type="train")
+
+    for element in dataset2:
+        if element[1].shape[1] != 152:
+            print("found one")
+    
+    print(vocab_size)
+        
     
 
     print("sucessfully loaded dataset...")
 
     model = Img2LaTex_model(args.embedding_dim, dec_lstm_h=args.lstm_rnn_h, vocab_size=vocab_size, enc_out_dim=args.enc_out_dim, dropout=args.dropout)
 
-    model = build_model(model)
+    model = build_model(model, 152)
 
 
     print("successfully built model...")

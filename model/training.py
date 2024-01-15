@@ -37,7 +37,7 @@ class Trainer(object):
 
                 epsilon = self.cal_epsilon(
                 self.args.decay_k, self.total_step, self.args.sample_method)
-                
+
                 with tf.GradientTape() as tape:
                     logits = self.model(imgs, tgt4training, epsilon, training=True) # -> (batch_size, max_len, vocab_size)
                     tgt4cal_loss = tf.one_hot(tf.cast(tgt4cal_loss, dtype=tf.int32), axis=-1, depth=logits.shape[-1])
