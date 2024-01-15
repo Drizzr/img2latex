@@ -39,7 +39,7 @@ for dataset in datasets:
     df = pd.read_csv(dataFilesPath + dataset + ".csv")
 
     with open(dataFilesPath + "tokenized_data/" + dataset + "_tokenized.csv", "w") as file:
-        file.write("formula,image_path\n")
+        file.write("formula;image_path\n")
         for _ , row  in df.iterrows():
                 tokenize_formula = []
                 formula = str(row["formula"]).strip("\n").split()
@@ -51,7 +51,7 @@ for dataset in datasets:
                     if token not in stoi:
                         if token.startswith("\\"):
                             #When token starts with \ it is a latex command and it gets replaced with <unk>
-                            tokenize_formula.append("<unk>")
+                            tokenize_formula.append(stoi['<unk>'])
                         else:
                             #split token into characters
                             for char in token:
@@ -59,7 +59,7 @@ for dataset in datasets:
                                     tokenize_formula.append(stoi[char])
                                 else:
                                     print("unknown Character: " + char)
-                                    tokenize_formula.append("<unk>")                        
+                                    tokenize_formula.append(stoi['<unk>'])                        
                         continue
                     else:
                         tokenize_formula.append(stoi[token])
@@ -67,13 +67,17 @@ for dataset in datasets:
                 tokenize_formula.append(stoi['<eos>'])
                 formularTokenLengths.append(len(tokenize_formula))
                 
-                if(len(tokenize_formula) > MAX_LENGTH):
+                if(len(tokenize_formula) > MAX_LENGTH + 2):
                     skippedFormulas += 1
                     continue
                 
                 for _ in range(MAX_LENGTH - len(formula)):
                     tokenize_formula.append(stoi['<pad>'])
-                    
+                
+                if(len(tokenize_formula) > MAX_LENGTH + 2):
+                    skippedFormulas += 1
+                    continue
+                
                 totalFormulas += 1
             
                 file.write(str(tokenize_formula) + ";" + row["image"] + "\n")
