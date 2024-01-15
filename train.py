@@ -38,7 +38,7 @@ def main():
     parser.add_argument("--print_freq", type=int, default=1)
 
     parser.add_argument("--sample_method", type=str, default="exp",
-                        choices=('exp', 'inv_sigmoid'),
+                        choices=('exp', 'inv_sigmoid', "teacher_forcing"),
                         help="The method to schedule sampling")
     
     parser.add_argument("--decay_k", type=float, default=0.002,)

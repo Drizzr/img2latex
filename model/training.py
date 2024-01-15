@@ -120,5 +120,7 @@ class Trainer(object):
             return decay_k ** step
         elif sample_method == 'inv_sigmoid':
             return decay_k / (decay_k + math.exp(step / decay_k))
+        elif sample_method == "teacher_forcing":
+            return 1
         else:
             raise ValueError('Not valid sample method')
