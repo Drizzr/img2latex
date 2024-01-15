@@ -3,13 +3,14 @@ from data.utils.vocab import Vocabulary
 from data_loader import create_dataset
 from model import Img2LaTex_model, Trainer
 import tensorflow as tf
+import pprint
 
 
 def build_model(model):
     # generate input to call method
     x = tf.random.uniform((1, 480, 96, 1))
     formula = tf.random.uniform((1, 150))
-
+    model(x, formula)
     return model
 
 def main():
@@ -30,12 +31,12 @@ def main():
 
     parser.add_argument("--num_epochs", type=int, default=15, help="number of epochs")
 
-    parser.add_argument("--batch_size", type=int, default=1)
+    parser.add_argument("--batch_size", type=int, default=2)
 
     parser.add_argument("--print_freq", type=int, default=100)
 
-    parser.add_argument("--sample_method", type=str, default="teacher_forcing",
-                        choices=('teacher_forcing', 'exp', 'inv_sigmoid'),
+    parser.add_argument("--sample_method", type=str, default="exp",
+                        choices=('exp', 'inv_sigmoid'),
                         help="The method to schedule sampling")
     
     parser.add_argument("--decay_k", type=float, default=0.002,)
@@ -58,24 +59,34 @@ def main():
     
     if from_check_point:
         pass # implement load from checkpoint
-
+    
+    print("------------------------------------------")
     print("training args: ", args)
-
+    print("------------------------------------------")
     # load vocab
     vocab = Vocabulary("data/vocab.txt")
 
     vocab_size = vocab.n_tokens
 
-    dataset = create_dataset(batch_size=args.batch_size, vocab=vocab, type="train", max_len=args.max_len)
+    dataset = create_dataset(batch_size=args.batch_size, vocab=vocab, type="train")
     
 
-    print("construct dataset...")
+    print("sucessfully loaded dataset...")
 
-    model = Img2LaTex_model(args.embedding_dim, args.lstm_rnn_h, vocab_size, args.enc_out_dim, args.max_len, args.dropout)
+    model = Img2LaTex_model(args.embedding_dim, dec_lstm_h=args.lstm_rnn_h, vocab_size=vocab_size, enc_out_dim=args.enc_out_dim, dropout=args.dropout)
 
     model = build_model(model)
 
-    print("model built...")
+
+    print("successfully built model...")
+
+    print("------------------------------------------")
+    print("model summary: ")
+    model.summary()
+    print("------------------------------------------")
+    print("begin training...")
+    print("------------------------------------------")
+
 
     trainer = Trainer(model, dataset, args)
 

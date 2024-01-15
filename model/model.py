@@ -72,16 +72,18 @@ class Img2LaTex_model(keras.Model):
 
             # we only use teacher for a subset of the data and for the rest we use the predicted token, this is called scheduled sampling and can be adjusted via epsilon
             if logits and tf.random.uniform((), 0, 1) > epsilon:
-                tgt = tf.argmax(tf.math.log(logits[-1]), dim=1, keepdim=True)
+                tgt = tf.cast(tf.argmax(tf.math.log(logits[-1]), axis=1), dtype=tf.float32)
 
         # initialize hidden and cell states of lstm
             dec_states, context_t, logit = self.step_decoding(
                 dec_states, context_t, encoded_imgs, tgt)
+
+            #if self.training:
             logits.append(logit)
 
-            logits = tf.stack(logits, axis=1) # -> (batch_size, max_len, vocab_size)
+        logits = tf.stack(logits, axis=1) # -> (batch_size, max_len, vocab_size)
 
-            return logits
+        return logits
     
     def step_decoding(self, dec_states, context, enc_out, tgt):
         """Runing one step decoding"""
@@ -95,15 +97,17 @@ class Img2LaTex_model(keras.Model):
         embedded = self.embedding(tgt) # -> (batch_size, 1, embedding_dim)
 
         prev_y = tf.squeeze(embedded, 1)  # -> (batch_size, embedding_dim)
-
         inp = tf.concat([prev_y, context], axis=1)  # -> (B, emb_size+dec_lstm_h)
-        h_t, c_t = self.rnn_decoder(inp, dec_states)  # h_t:[B, dec_lstm_h]
+        _ , (h_t, c_t) = self.rnn_decoder(inp, dec_states)  # h_t:[B, dec_lstm_h]
+
+
         h_t = self.dropout(h_t)
         c_t = self.dropout(c_t) # prevent overfitting
 
 
         new_context = self._get_attn(enc_out, h_t) # -> (batch_size, dec_lstm_h)
 
+        
         # calculate logit
         logit = self.W_out(h_t)
 
@@ -149,9 +153,7 @@ class Img2LaTex_model(keras.Model):
 
         context_vector = tf.reduce_sum(context_vector, axis=1) # -> (batch_size, dec_lstm_h)
 
-    
-
-        return context_vector, attention_weights
+        return context_vector
     
     def init_decoder(self, enc_out):
         """args:

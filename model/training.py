@@ -3,15 +3,14 @@ import tensorflow as tf
 import math
 
 class Trainer(object):
-    def __init__(self, optimizer, model, lr_scheduler,
-                 dataset, val_dataset, args,
-                 use_cuda=True, init_epoch=1, last_epoch=15):
+    def __init__(self, model,
+                 dataset, args,
+                 init_epoch=1, last_epoch=15, optimizer=tf.keras.optimizers.legacy.Adam(learning_rate=0.001)):
 
         self.optimizer = optimizer
         self.model = model
-        self.lr_scheduler = lr_scheduler
         self.dataset = dataset
-        self.val_dataset = val_dataset
+        #self.val_dataset = val_dataset
         self.args = args
 
         self.step = 0
@@ -19,8 +18,8 @@ class Trainer(object):
         self.epoch = init_epoch
         self.last_epoch = last_epoch
         self.best_val_loss = 1e18
-        self.loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-        self.optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
+        self.loss_fn = tf.keras.losses.CategoricalCrossentropy(from_logits=True)
+        self.optimizer = optimizer
 
         self.losses = []
 
@@ -30,8 +29,9 @@ class Trainer(object):
         while self.epoch <= self.last_epoch:
             losses = 0.0
 
-            for (imgs, target) in enumerate(self.train_loader):
+            for  _, (imgs, target) in enumerate(self.dataset):
                 
+
                 step_loss = self.train_step(imgs, target)
                 losses += step_loss
 
@@ -39,8 +39,8 @@ class Trainer(object):
                 if self.step % self.args.print_freq == 0:
                     avg_loss = losses / self.args.print_freq
                     print(mes.format(
-                        self.epoch, self.step, len(self.train_loader),
-                        100 * self.step / len(self.train_loader),
+                        self.epoch, self.step, len(self.dataset),
+                        100 * self.step / len(self.dataset),
                         avg_loss,
                         2**avg_loss
                     ))
@@ -64,9 +64,10 @@ class Trainer(object):
             epsilon = self.cal_epsilon(
                 self.args.decay_k, self.total_step, self.args.sample_method)
             logits = self.model(imgs, tgt4training, epsilon, training=True)
-
+            print(logits.shape)
+            print(tgt4cal_loss.shape)
             # calculate loss
-            loss = self.loss_fn(logits, tgt4cal_loss)
+            loss = self.loss_fn(tgt4cal_loss, logits)
             grads = tape.gradient(loss, self.model.trainable_variables)
             if self.args.clip > 0:
                 grads, _ = tf.clip_by_global_norm(grads, self.args.clip)
@@ -89,7 +90,7 @@ class Trainer(object):
             epsilon = self.cal_epsilon(
                 self.args.decay_k, self.total_step, self.args.sample_method)
             logits = self.model(imgs, tgt4training, epsilon, training=False)
-            loss = self.loss_fn(logits, tgt4cal_loss)
+            loss = self.loss_fn(tgt4cal_loss, logits)
             val_total_loss += loss
             avg_loss = val_total_loss / len(self.val_loader)
             print(mes.format(
