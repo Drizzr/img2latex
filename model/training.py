@@ -2,6 +2,7 @@ import os
 import tensorflow as tf
 import math
 import numpy as np
+import time
 
 class Trainer(object):
     def __init__(self, model,
@@ -25,7 +26,8 @@ class Trainer(object):
         self.losses = []
 
     def train(self):
-        mes = "Epoch {}, step:{}/{} {:.2f}%, Loss:{:.4f}, Perplexity:{:.4f}"
+        stepComputeTime = time.process_time()
+        mes = "Epoch {}, step:{}/{} {:.2f}%, Loss:{:.4f}, Perplexity:{:.4f}, time (s): {:.2f}, Epochtime (h): {:.2f}"
         print("Num GPUs Available 👀: ", len(tf.config.list_physical_devices('GPU')))
         while self.epoch <= self.last_epoch:
             losses = 0.0
@@ -61,12 +63,16 @@ class Trainer(object):
                 # log message
                 if self.step % self.args.print_freq == 0:
                     avg_loss = losses / self.args.print_freq
+                    remaining_time = (time.process_time() - stepComputeTime) * (len(self.dataset)-self.step)/3600
                     print(mes.format(
                         self.epoch, self.step, len(self.dataset),
                         100 * self.step / len(self.dataset),
                         avg_loss,
-                        2**avg_loss
+                        2**avg_loss,
+                        time.process_time() - stepComputeTime,
+                        remaining_time
                     ))
+                    stepComputeTime = time.process_time()
                     self.losses.append(avg_loss)
                     losses = 0.0
 
