@@ -6,9 +6,9 @@ import numpy as np
 class Trainer(object):
     def __init__(self, model,
                  dataset, args,
-                 init_epoch=1, last_epoch=15, optimizer=tf.keras.optimizers.Adam(learning_rate=0.001)):
+                 init_epoch=1, last_epoch=15):
 
-        self.optimizer = optimizer
+
         self.model = model
         self.dataset = dataset
         #self.val_dataset = val_dataset
@@ -20,7 +20,7 @@ class Trainer(object):
         self.last_epoch = last_epoch
         self.best_val_loss = 1e18
         self.loss_fn = tf.keras.losses.CategoricalCrossentropy(from_logits=True)
-        self.optimizer = optimizer
+        self.optimizer = tf.keras.optimizers.Adam(learning_rate=args.lr)
 
         self.losses = []
 
