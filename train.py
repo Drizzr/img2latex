@@ -6,6 +6,7 @@ import tensorflow as tf
 import time
 import sys
 import json
+import os
 
 def build_model(model, formula_len):
     # generate input to call method
@@ -16,6 +17,31 @@ def build_model(model, formula_len):
     print("successfully built model...")
     print("time to build model: ", round(time.time() - start_time, 4), "s")
     return model
+
+
+def load_from_checkpoint(save_dir, args, vocab, dataset, val_dataset):
+    """Load model from checkpoint"""
+    print("loading model from checkpoint...")
+    with open(os.path.join(save_dir, "params.json"), "r") as f:
+        params = json.load(f)
+
+    vocab_size = vocab.n_tokens
+
+    model = Img2LaTex_model(embedding_dim=params["embedding_dim"], enc_out_dim=params["enc_out_dim"], vocab_size=vocab_size,
+                            attention_head_size=params["attention_head_size"], encoder_units=params["encoder_units"],
+                            decoder_units=params["decoder_units"],)
+    
+    
+    model = build_model(model, 152)
+
+    model.load_weights(os.path.join(save_dir, "weights.h5"))
+    print("model loaded successfully...")
+
+    trainer = Trainer(model, dataset, args, val_dataset, init_epoch=params["epoch"])
+    trainer.step = params["step"]
+
+    return trainer, model
+    
 
 def main():
 
@@ -65,8 +91,6 @@ def main():
 
     from_check_point = args.from_check_point
     
-    if from_check_point:
-        pass # implement load from checkpoint
     
     print("_________________________________________________________________")
     print("HYPERPARAMETERS: ")
@@ -92,15 +116,18 @@ def main():
 
     print("sucessfully loaded dataset...")
 
-    model = Img2LaTex_model(args.embedding_dim, enc_out_dim=args.enc_out_dim, vocab_size=vocab_size, 
-                            attention_head_size=args.attention_head_size, encoder_units=args.encoder_units,
-                            decoder_units=args.decoder_units, dropout=args.dropout)
+    if from_check_point:
+        trainer, model = load_from_checkpoint(args.save_dir, args, vocab, dataset, val_dataset)
+    
+    else:
+        model = Img2LaTex_model(args.embedding_dim, enc_out_dim=args.enc_out_dim, vocab_size=vocab_size, 
+                                attention_head_size=args.attention_head_size, encoder_units=args.encoder_units,
+                                decoder_units=args.decoder_units, dropout=args.dropout)
 
-    model = build_model(model, 152)
+        model = build_model(model, 152)
 
-    prod = LatexProducer(model, vocab)
-
-
+        trainer = Trainer(model, dataset, args, val_dataset)
+    
     print("_________________________________________________________________")
     print("MODEL SUMMARY 🍆: ")
     model.summary()
@@ -109,30 +136,13 @@ def main():
     print(f"expected loss for random guessing: {-tf.math.log(1/vocab_size)}")
     print("_________________________________________________________________")
 
-
-    trainer = Trainer(model, dataset, args, val_dataset, prod)
-
     try:
         trainer.train()
     except KeyboardInterrupt as e:
         print(e)
-        print("saving model...")
-        model.save("checkpoints/test.keras")
-
-        params = {
-            
-            "embedding_dim": args.embedding_dim,
-            "encoder_units": args.encoder_units,
-            "enc_out_dim": args.enc_out_dim,
-            "decoder_units": args.decoder_units,
-            "attention_head_size": args.attention_head_size,
-            "vocab_size": vocab_size,
-            }
         
-        with open("checkpoints/params.json", "w") as f:
-            json.dump(params, f)
+        trainer.save_model(vocab_size)
         
-        print("model saved successfully...")
         sys.exit()
 
 

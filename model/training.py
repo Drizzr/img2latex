@@ -4,10 +4,11 @@ import math
 import numpy as np
 import time
 from .inference import  LatexProducer
+import json
 
 class Trainer(object):
     def __init__(self, model,
-                 dataset, args, val_dataset, producer,
+                 dataset, args, val_dataset,
                  init_epoch=1, last_epoch=15):
 
 
@@ -25,8 +26,6 @@ class Trainer(object):
         self.optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=args.lr)
 
         self.losses = []
-
-        self.generate = producer
 
     def train(self):
         stepComputeTime = time.process_time()
@@ -81,10 +80,6 @@ class Trainer(object):
                     self.losses.append(avg_loss)
                     losses = 0.0
                     
-                    if self.step % 300 == 0:
-                        print("prediceted: ")
-                        print(self.generate._greedy_decoding(tf.expand_dims(imgs[0, :, : , :], 0)))
-                        print(self.generate._print_target_sequence(tgt4training[0, :]))
 
             # one epoch Finished, calcute val loss
             val_loss = self.validate()
@@ -112,13 +107,30 @@ class Trainer(object):
         ))
         return avg_loss
 
-    def save_model(self, model_name):
+    def save_model(self, vocab_size):
+        print("saving model...")
+        path = "checkpoints" + "/" + f"chechpoint_epoch_{self.epoch}_{round(self.step/len(self.dataset), 3)*100}%_estimated_loss_{round(float(self.losses[-1]), 3)}"
+        if not os.path.exists(path= path):
+            os.makedirs(path)
+        
+        params = {
+            
+            "embedding_dim": self.args.embedding_dim,
+            "encoder_units": self.args.encoder_units,
+            "enc_out_dim": self.args.enc_out_dim,
+            "decoder_units": self.args.decoder_units,
+            "attention_head_size": self.args.attention_head_size,
+            "vocab_size": vocab_size,
+            "epoch": self.epoch,
+            "step": self.step,
+            }
+        
+        with open(os.path.join(path, "params.json"), "w") as f:
+            json.dump(params, f)
+        
+        self.model.save_weights(os.path.join(path, "weights.h5"))
 
-        save_path = "self.args.save_dir" + "model_name" + '.pt'
-        print("Saving checkpoint to {}".format(save_path))
-
-        self.model.save(save_path)
-    
+        print("model saved successfully...")
 
     @staticmethod
     def cal_epsilon(decay_k, step, sample_method):
@@ -135,3 +147,6 @@ class Trainer(object):
             return 1
         else:
             raise ValueError('Not valid sample method')
+        
+
+
