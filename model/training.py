@@ -8,7 +8,7 @@ import json
 
 class Trainer(object):
     def __init__(self, model,
-                 dataset, args, val_dataset,
+                 dataset, args, val_dataset, vocab_size,
                  init_epoch=1, last_epoch=15):
 
 
@@ -17,6 +17,7 @@ class Trainer(object):
         self.val_dataset = val_dataset
         self.args = args
 
+        self.vocab_size = vocab_size 
         self.step = 0
         self.total_step = 0
         self.epoch = init_epoch
@@ -84,7 +85,7 @@ class Trainer(object):
             # one epoch Finished, calcute val loss
             val_loss = self.validate()
 
-            self.save_model('ckpt-{}-{:.4f}'.format(self.epoch, val_loss))
+            self.save_model()
             self.epoch += 1
             self.step = 0
 
@@ -107,7 +108,7 @@ class Trainer(object):
         ))
         return avg_loss
 
-    def save_model(self, vocab_size):
+    def save_model(self):
         print("saving model...")
         path = "checkpoints" + "/" + f"chechpoint_epoch_{self.epoch}_{round(self.step/len(self.dataset)*100, 3)}%_estimated_loss_{round(float(self.losses[-1]), 3)}"
         if not os.path.exists(path= path):
@@ -120,7 +121,7 @@ class Trainer(object):
             "enc_out_dim": self.args.enc_out_dim,
             "decoder_units": self.args.decoder_units,
             "attention_head_size": self.args.attention_head_size,
-            "vocab_size": vocab_size,
+            "vocab_size": self.vocab_size,
             "epoch": self.epoch,
             "step": self.step,
             }

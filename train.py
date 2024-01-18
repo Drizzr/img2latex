@@ -37,7 +37,7 @@ def load_from_checkpoint(save_dir, args, vocab, dataset, val_dataset):
     model.load_weights(os.path.join(save_dir, "weights.h5"))
     print("model loaded successfully...")
 
-    trainer = Trainer(model, dataset, args, val_dataset, init_epoch=params["epoch"])
+    trainer = Trainer(model, dataset, args, val_dataset, init_epoch=params["epoch"], vocab_size=vocab_size)
     trainer.step = params["step"]
 
     return trainer, model
@@ -126,7 +126,7 @@ def main():
 
         model = build_model(model, 152)
 
-        trainer = Trainer(model, dataset, args, val_dataset)
+        trainer = Trainer(model, dataset, args, val_dataset, vocab_size)
     
     print("_________________________________________________________________")
     print("MODEL SUMMARY 🍆: ")
@@ -141,7 +141,7 @@ def main():
     except KeyboardInterrupt as e:
         print(e)
         
-        trainer.save_model(vocab_size)
+        trainer.save_model()
         
         sys.exit()
 
