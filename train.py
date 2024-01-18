@@ -4,7 +4,8 @@ from data_loader import create_dataset
 from model import Img2LaTex_model, Trainer, LatexProducer
 import tensorflow as tf
 import time
-
+import sys
+import json
 
 def build_model(model, formula_len):
     # generate input to call method
@@ -13,7 +14,7 @@ def build_model(model, formula_len):
     formula = tf.random.uniform((1, formula_len))
     model(x, formula)
     print("successfully built model...")
-    print("time to build model: ", time.time() - start_time)
+    print("time to build model: ", round(time.time() - start_time, 4), "s")
     return model
 
 def main():
@@ -24,9 +25,13 @@ def main():
     # model args
     parser.add_argument("--embedding_dim", type=int, default=80)
 
-    parser.add_argument("--lstm_rnn_h", type=int, default=64, help="size of the lstm hidden state")
+    parser.add_argument("--decoder_units", type=int, default=64, help="size of the lstm hidden state")
 
     parser.add_argument("--enc_out_dim", type=int, default=64, help="size of the encoder output")
+
+    parser.add_argument("--encoder_units", type=int, default=64, help="size of the lstm hidden state")
+
+    parser.add_argument("--attention_head_size", type=int, default=32, help="size of the lstm hidden state")
 
     parser.add_argument("--max_len", type=int, default=512, help="size of the token length")
 
@@ -54,7 +59,7 @@ def main():
 
     parser.add_argument("--lr_decay", type=float, default=0.5, help="learning rate decay")
 
-    
+    parser.add_argument("--save_dir", type=str, default="checkpoints/", help="directory to save model")
 
     args = parser.parse_args()
 
@@ -75,7 +80,7 @@ def main():
 
     dataset = create_dataset(batch_size=args.batch_size, vocab=vocab, type="train")
 
-    dataset2 = create_dataset(batch_size=1, vocab=vocab, type="train")
+    val_dataset = create_dataset(batch_size=args.batch_size, vocab=vocab, type="validate")
 
     """for element in dataset2:
         if element[1].shape[1] != 152:
@@ -87,13 +92,14 @@ def main():
 
     print("sucessfully loaded dataset...")
 
-    model = Img2LaTex_model(args.embedding_dim, dec_lstm_h=args.lstm_rnn_h, vocab_size=vocab_size, enc_out_dim=args.enc_out_dim, dropout=args.dropout)
+    model = Img2LaTex_model(args.embedding_dim, enc_out_dim=args.enc_out_dim, vocab_size=vocab_size, 
+                            attention_head_size=args.attention_head_size, encoder_units=args.encoder_units,
+                            decoder_units=args.decoder_units, dropout=args.dropout)
 
     model = build_model(model, 152)
 
-    #prod = LatexProducer(model, vocab)
+    prod = LatexProducer(model, vocab)
 
-    #print(prod._greedy_decoding(tf.random.uniform((1, 480, 96, 1))))
 
     print("_________________________________________________________________")
     print("MODEL SUMMARY 🍆: ")
@@ -104,9 +110,31 @@ def main():
     print("_________________________________________________________________")
 
 
-    trainer = Trainer(model, dataset, args)
+    trainer = Trainer(model, dataset, args, val_dataset, prod)
 
-    trainer.train()
+    try:
+        trainer.train()
+    except KeyboardInterrupt as e:
+        print(e)
+        print("saving model...")
+        model.save("checkpoints/test.keras")
+
+        params = {
+            
+            "embedding_dim": args.embedding_dim,
+            "encoder_units": args.encoder_units,
+            "enc_out_dim": args.enc_out_dim,
+            "decoder_units": args.decoder_units,
+            "attention_head_size": args.attention_head_size,
+            "vocab_size": vocab_size,
+            }
+        
+        with open("checkpoints/params.json", "w") as f:
+            json.dump(params, f)
+        
+        print("model saved successfully...")
+        sys.exit()
+
 
 
 
