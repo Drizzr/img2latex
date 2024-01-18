@@ -5,7 +5,7 @@ from data.utils import Vocabulary
 from data_loader import create_dataset
 
 
-with open("checkpoints/params.json", "r") as f:
+with open("checkpoints/chechpoint_epoch_1_1.754%_estimated_loss_1.256/params.json", "r") as f:
     params = json.load(f)
 
 vocab = Vocabulary("data/vocab.txt")
@@ -20,5 +20,18 @@ x = tf.random.uniform((1, 480, 96, 1))
 formula = tf.random.uniform((1, 150))
 model(x, formula)
 
-model.load_weights("checkpoints/test.h5")
+model.load_weights("checkpoints/chechpoint_epoch_1_1.754%_estimated_loss_1.256/weights.h5")
 
+
+
+dataset = create_dataset(vocab=vocab, batch_size=1, type="validate")
+
+gen = LatexProducer(model, vocab, max_len=150)
+
+for imgs, formulas in dataset:
+    print("_______________________________________________________________________________________________")
+    gen._print_target_sequence(tf.squeeze(formulas).numpy())
+    print("gen: ", gen._greedy_decoding(imgs))
+    print("_______________________________________________________________________________________________")
+
+    

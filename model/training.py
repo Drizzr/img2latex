@@ -109,7 +109,7 @@ class Trainer(object):
 
     def save_model(self, vocab_size):
         print("saving model...")
-        path = "checkpoints" + "/" + f"chechpoint_epoch_{self.epoch}_{round(self.step/len(self.dataset), 3)*100}%_estimated_loss_{round(float(self.losses[-1]), 3)}"
+        path = "checkpoints" + "/" + f"chechpoint_epoch_{self.epoch}_{round(self.step/len(self.dataset)*100, 3)}%_estimated_loss_{round(float(self.losses[-1]), 3)}"
         if not os.path.exists(path= path):
             os.makedirs(path)
         
