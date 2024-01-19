@@ -33,7 +33,8 @@ gen = LatexProducer(model, vocab, max_len=150)
 for imgs, formulas in dataset:
     print("_______________________________________________________________________________________________")
     gen._print_target_sequence(tf.squeeze(formulas).numpy())
-    print("gen: ", gen._greedy_decoding(imgs))
+    print("beam_search: ", gen._beam_search(imgs))
+    print("greedy_search: ", gen._greedy_decoding(imgs))
     print("_______________________________________________________________________________________________")
 
     
