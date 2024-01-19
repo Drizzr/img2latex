@@ -82,6 +82,7 @@ class LatexProducer():
 
             topk_log_probs, topk_ids = tf.math.top_k(log_probs, k=k) # topk_log_probs shape (beam_width, k), topk_ids shape (beam_width, k)
 
+            topk_log_probs = topk_log_probs / (t+1)**2 # normalize by length
             
             topk_beam_index = topk_ids // self.vocab.n_tokens # topk_beam_index shape (beam_width, k)
             topk_ids = topk_ids % self.vocab.n_tokens # topk_ids shape (k)
