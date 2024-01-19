@@ -27,8 +27,9 @@ class Trainer(object):
         self.optimizer = tf.keras.optimizers.legacy.Adam(learning_rate=args.lr)
 
         self.losses = []
+        self.val_losses = []
 
-    #@tf.function
+
     def train(self):
         stepComputeTime = time.process_time()
         mes = "Epoch {}, step:{}/{} {:.2f}%, Loss:{:.4f}, Perplexity:{:.4f}, time (s): {:.2f}, Epochtime (h): {:.2f}"
@@ -81,10 +82,14 @@ class Trainer(object):
 
             # one epoch Finished, calcute val loss
             val_loss = self.validate()
+            self.val_losses.append(val_loss)
 
-            self.save_model()
+
+            
             self.epoch += 1
             self.step = 0
+
+            self.save_model()
 
     def validate(self):
 
@@ -121,6 +126,8 @@ class Trainer(object):
             "vocab_size": self.vocab_size,
             "epoch": self.epoch,
             "step": self.step,
+            "batch_size": self.args.batch_size,
+
             }
         
         with open(os.path.join(path, "params.json"), "w") as f:

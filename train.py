@@ -38,7 +38,12 @@ def load_from_checkpoint(save_dir, args, vocab, dataset, val_dataset):
     print("model loaded successfully...")
 
     trainer = Trainer(model, dataset, args, val_dataset, init_epoch=params["epoch"], vocab_size=vocab_size)
-    trainer.step = params["step"]
+
+    current_batch_size = args.batch_size
+    checkpoint_batch_size = params["batch_size"]
+
+
+    trainer.step = params["step"] * (checkpoint_batch_size // current_batch_size)
 
     return trainer, model
     

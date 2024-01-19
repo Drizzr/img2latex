@@ -62,14 +62,7 @@ class Img2LaTex_model(keras.Model):
         """
         encoded_imgs = self.encode(imgs) # -> (batch_size, 360, 512)
         
-        embeddings = self.embedding(formulas) # -> (batch_size, max_len, embedding_dim)
-        
-        x, state = self.rnn_decoder(embeddings, initial_state=state)
-
-        
-        x = self.cross_attention(x, encoded_imgs)
-
-        logits = self.output_layer(x)
+        logits, state = self.decode(encoded_imgs, formulas, state=state)
 
         if return_state:
             return logits, state
@@ -77,7 +70,7 @@ class Img2LaTex_model(keras.Model):
     
 
         
-    
+    @tf.function
     def encode(self, imgs):
         # input size: [B, W, H, C] in our case [Batch_size, 480, 96, 1]
         x = self.cnn_encoder(imgs)
@@ -91,9 +84,22 @@ class Img2LaTex_model(keras.Model):
 
         x = self.dropout(x)
 
-
         return x
     
+
+    @tf.function
+    def decode(self, encoded_imgs, formulas, state=None):
+
+        embeddings = self.embedding(formulas) # -> (batch_size, max_len, embedding_dim)
+        
+        x, state = self.rnn_decoder(embeddings, initial_state=state)
+
+        
+        x = self.cross_attention(x, encoded_imgs)
+
+        logits = self.output_layer(x)
+
+        return logits, state
 
     def build_graph(self, raw_shape):
         x = keras.Input(shape=raw_shape, batch_size=1)
@@ -116,6 +122,7 @@ class CrossAttention(keras.layers.Layer):
         self.add = keras.layers.Add()
     
 
+    @tf.function
     def call(self, x, context):
 
         attn_output, attn_scores = self.mha(

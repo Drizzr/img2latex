@@ -40,6 +40,32 @@ class LatexProducer():
 
         return " ".join(formula)
     
+
+    """def _beam_search(self, img, beam_width=3):
+
+        tgt = tf.ones((beam_width, 1), dtype=tf.int32) * self.vocab.tok_to_id["<sos>"]
+
+        probs = tf.concat(tf.zeros((1,), dtype=tf.float32), tf.ones((beam_width-1,), dtype=tf.float32)*(-1e10))
+
+        complete_seqs = []
+        complete_seqs_scores = []
+
+        state = None
+
+        for t in range(self.max_len):
+            
+            logits, state = self.model(img, tgt, state=state, training=False)
+
+            top_probs = tf.nn.top_k(logits, k=beam_width)
+
+            if pred_id == self.vocab.tok_to_id["<eos>"]:
+                break
+
+            # use the predicted token as the next input to the decoder
+            tgt = tf.ones((1, 1), dtype=tf.int32) * pred_id"""
+
+
+    
     def _get_next_token(self, img, prior_token, state, temperature=1.0):
         """Get the next token"""
         # predict logit
@@ -54,5 +80,9 @@ class LatexProducer():
         """Print the target sequence"""
         formula = []
         for i in target:
+            if i == self.vocab.tok_to_id["<eos>"]:
+                break
             formula.append(self.vocab.id_to_tok[int(i)])
+        
+        formula.pop(0)
         print("Target sequence: ", " ".join(formula))

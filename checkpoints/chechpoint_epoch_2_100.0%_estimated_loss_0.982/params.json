@@ -1,1 +1,0 @@
-{"embedding_dim": 80, "encoder_units": 64, "enc_out_dim": 64, "decoder_units": 64, "attention_head_size": 32, "vocab_size": "ckpt-2-0.8820", "epoch": 2, "step": 1176}
