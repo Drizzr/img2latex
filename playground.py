@@ -5,7 +5,9 @@ from data.utils import Vocabulary
 from data_loader import create_dataset
 
 
-with open("checkpoints/chechpoint_epoch_1_4.066%_estimated_loss_1.009/params.json", "r") as f:
+PATH = "checkpoints/chechpoint_epoch_6_100.0%_estimated_loss_0.675"
+
+with open(PATH + "/params.json", "r") as f:
     params = json.load(f)
 
 vocab = Vocabulary("data/vocab.txt")
@@ -20,7 +22,7 @@ x = tf.random.uniform((1, 480, 96, 1))
 formula = tf.random.uniform((1, 150))
 model(x, formula)
 
-model.load_weights("checkpoints/chechpoint_epoch_1_4.066%_estimated_loss_1.009/weights.h5")
+model.load_weights(PATH + "/weights.h5")
 
 
 

@@ -33,9 +33,8 @@ class Img2LaTex_model(keras.Model):
         self.encoder_rnn  = tf.keras.layers.Bidirectional(
                                     merge_mode='sum',
                                     layer=tf.keras.layers.GRU(encoder_units,
-                                    # Return the sequence and state
+                                    # Return the sequence
                                     return_sequences=True,
-                                    return_state=True,
                                     recurrent_initializer='glorot_uniform'))
         
         self.dropout = keras.layers.Dropout(dropout)
@@ -64,9 +63,10 @@ class Img2LaTex_model(keras.Model):
         encoded_imgs = self.encode(imgs) # -> (batch_size, 360, 512)
         
         embeddings = self.embedding(formulas) # -> (batch_size, max_len, embedding_dim)
-
+        
         x, state = self.rnn_decoder(embeddings, initial_state=state)
 
+        
         x = self.cross_attention(x, encoded_imgs)
 
         logits = self.output_layer(x)
@@ -87,9 +87,10 @@ class Img2LaTex_model(keras.Model):
         B, W, H, C = x.shape
         x = tf.reshape(x, (B, W*H, C)) #-> (batch_size, W' * H', 256)
 
-        x, ht, ct = self.encoder_rnn(x) # -> (batch_size, W' * H', 2*encoder_units)
+        x  = self.encoder_rnn(x) # -> (batch_size, W' * H', 2*encoder_units)
 
         x = self.dropout(x)
+
 
         return x
     

@@ -28,6 +28,7 @@ class Trainer(object):
 
         self.losses = []
 
+    #@tf.function
     def train(self):
         stepComputeTime = time.process_time()
         mes = "Epoch {}, step:{}/{} {:.2f}%, Loss:{:.4f}, Perplexity:{:.4f}, time (s): {:.2f}, Epochtime (h): {:.2f}"
@@ -39,10 +40,6 @@ class Trainer(object):
                 
                 tgt4training = target[:, :-1] # remove <eos>
                 tgt4cal_loss = target[:, 1:] # remove <sos>
-
-                epsilon = self.cal_epsilon(
-                self.args.decay_k, self.total_step, self.args.sample_method)
-
 
                 with tf.GradientTape() as tape:
                     logits = self.model(imgs, tgt4training, training=True) # -> (batch_size, max_len, vocab_size)
@@ -133,21 +130,5 @@ class Trainer(object):
 
         print("model saved successfully...")
 
-    @staticmethod
-    def cal_epsilon(decay_k, step, sample_method):
-        """
-        Reference:
-            Scheduled Sampling for Sequence Prediction with Recurrent Neural Networks
-            See details in https://arxiv.org/pdf/1506.03099.pdf
-        """
-        if sample_method == 'exp':
-            return decay_k ** step
-        elif sample_method == 'inv_sigmoid':
-            return decay_k / (decay_k + math.exp(step / decay_k))
-        elif sample_method == "teacher_forcing":
-            return 1
-        else:
-            raise ValueError('Not valid sample method')
-        
 
 

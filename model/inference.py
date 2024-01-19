@@ -19,40 +19,32 @@ class LatexProducer():
     def _greedy_decoding(self, img):
         """Greedy Decoding"""
         # encode
-        enc_out = self.model.encode(img)
 
-        batch_size = enc_out.shape[0]
-
-        #dec_states, context_t = self.model.init_decoder(enc_out)
-
-        # first input to the decoder is <sos>
-
-        tgt = tf.ones((batch_size, 1), dtype=tf.int32) * self.vocab.tok_to_id["<sos>"]
-        embedded = self.model.embedding(tgt)
-        
+        tgt = tf.ones((1, 1), dtype=tf.int32) * self.vocab.tok_to_id["<sos>"]
         
         # greedy decoding
         formula = []
 
-        state = self.model.rnn_decoder.get_initial_state(embedded)
+        state = None
 
         for t in range(self.max_len):
             
-            pred_id, state = self._get_next_token(enc_out, tgt, state)
-
-            formula.append(self.vocab.id_to_tok[int(pred_id)])
+            pred_id, state = self._get_next_token(img, tgt, state)
+            
             if pred_id == self.vocab.tok_to_id["<eos>"]:
                 break
+
+            formula.append(self.vocab.id_to_tok[int(pred_id)])
             # use the predicted token as the next input to the decoder
             tgt = tf.ones((1, 1), dtype=tf.int32) * pred_id
 
         return " ".join(formula)
     
-    def _get_next_token(self, context, prior_token, state, temperature=1.0):
+    def _get_next_token(self, img, prior_token, state, temperature=1.0):
         """Get the next token"""
         # predict logit
-        logit, state = self.model(context, prior_token, state, return_state=True)
-
+        logit, state = self.model(img, prior_token, state, return_state=True, training=False)
+        
         # sample token
         pred_id = tf.argmax(logit, axis=2).numpy()[0]
         
