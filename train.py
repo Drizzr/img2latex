@@ -81,7 +81,7 @@ def main():
     
     parser.add_argument("--clip", type=float, default=5.0, help="gradient clipping")
 
-    parser.add_argument("--lr", type=float, default=0.001, help="learning rate")
+    parser.add_argument("--lr", type=float, default=3*10**(-4), help="learning rate")
 
     parser.add_argument("--lr_decay", type=float, default=0.5, help="learning rate decay")
 
