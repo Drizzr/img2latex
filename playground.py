@@ -5,7 +5,7 @@ from data.utils import Vocabulary
 from data_loader import create_dataset
 
 
-PATH = "checkpoints/chechpoint_epoch_11_00.0%_estimated_loss_0.482"
+PATH = "checkpoints/chechpoint_epoch_16_0.0%_estimated_loss_0.347"
 
 with open(PATH + "/params.json", "r") as f:
     params = json.load(f)
