@@ -44,8 +44,8 @@ if args.render:
     for imgs, formulas in dataset:
         print("_______________________________________________________________________________________________")
         gen._print_target_sequence(tf.squeeze(formulas).numpy())
-        print("beam_search: ", gen._beam_search(imgs, beam_width=10))
-        print("greedy_search: ", gen._greedy_decoding(imgs))
+        generatedSequence = gen._greedy_decoding(imgs)
+        print("greedy_search: ", generatedSequence)
         print("_______________________________________________________________________________________________")
         fig, ax = plt.subplots(figsize=(6, 4), tight_layout=True)
         ax.set_title(r"$\displaystyle " + generatedSequence + "$", fontsize=20)
