@@ -3,9 +3,19 @@ from model import Img2LaTex_model, Trainer, LatexProducer
 import json
 from data.utils import Vocabulary
 from data_loader import create_dataset
+import argparse
+import matplotlib.pyplot as plt
+
+plt.rcParams['text.usetex'] = True
 
 
 PATH = "checkpoints/chechpoint_epoch_16_0.0%_estimated_loss_0.347"
+
+# load params
+parser = argparse.ArgumentParser(description="Play with the model.")
+parser.add_argument("--render", action='store_true',
+                        default=False, help="Render formulas")
+args = parser.parse_args()
 
 with open(PATH + "/params.json", "r") as f:
     params = json.load(f)
@@ -30,10 +40,23 @@ dataset = create_dataset(vocab=vocab, batch_size=1, type="validate")
 
 gen = LatexProducer(model, vocab, max_len=150)
 
-for imgs, formulas in dataset:
-    print("_______________________________________________________________________________________________")
-    gen._print_target_sequence(tf.squeeze(formulas).numpy())
-    print("gen: ", gen._greedy_decoding(imgs))
-    print("_______________________________________________________________________________________________")
+if args.render:
+    for imgs, formulas in dataset:
+        print("_______________________________________________________________________________________________")
+        gen._print_target_sequence(tf.squeeze(formulas).numpy())
+        generatedSequence = gen._greedy_decoding(imgs)
+        print("gen: ", generatedSequence)
+        print("_______________________________________________________________________________________________")
+        fig, ax = plt.subplots(figsize=(6, 4), tight_layout=True)
+        ax.set_title(r"$\displaystyle " + generatedSequence + "$", fontsize=20)
+        ax.imshow(tf.squeeze(imgs).numpy(), cmap="gray")
+        
+        plt.show()
+else:
+    for imgs, formulas in dataset:
+        print("_______________________________________________________________________________________________")
+        gen._print_target_sequence(tf.squeeze(formulas).numpy())
+        print("gen: ", gen._greedy_decoding(imgs))
+        print("_______________________________________________________________________________________________")
 
-    
+        
