@@ -4,18 +4,19 @@ from PIL import Image
 import pandas as pd
 
 
+
 def load_and_preprocess_img(path):
-    img = Image.open(path)
-    img = np.array(img)
-    img = img / 255.0
+    img = tf.io.read_file(path)
+    img = tf.io.decode_png(img, channels=1)
+    img = tf.cast(img, dtype=tf.dtypes.float32) / 255.0
     return img
 
 def strArrayToNumpyArray(strArray):
     #takes an string in the form "[1, 2, 3]" and returns a numpy array
-    strArray = strArray.replace("[", "")
-    strArray = strArray.replace("]", "")
-    strArray = strArray.replace(" ", "")
-    return np.array(strArray.split(","), dtype=np.int32)
+    strArray = tf.strings.regex_replace(strArray, "\[", "")
+    strArray = tf.strings.regex_replace(strArray, "\]", "")
+    strArray = tf.strings.regex_replace(strArray, "\s", "")
+    return tf.strings.to_number(tf.strings.split(strArray, sep=","), out_type=tf.dtypes.float32)
 
 def create_dataset(path="data/tokenized_data/", img_path = "data/preprocessed_imgs/", type="train", batch_size=32, vocab=None):
 
@@ -25,9 +26,13 @@ def create_dataset(path="data/tokenized_data/", img_path = "data/preprocessed_im
 
 
     ds = tf.data.Dataset.from_tensor_slices((img_paths, labels))
-    ds = ds.map(lambda x, y: (load_and_preprocess_img(img_path + x), strArrayToNumpyArray(y)))
 
-    return ds.shuffle().batch(batch_size)
+    
+
+    ds = ds.map(lambda x, y: (load_and_preprocess_img(img_path + x), strArrayToNumpyArray(y)))
+    ds = ds.shuffle(32000).batch(batch_size)
+
+    return ds
 
 
 
