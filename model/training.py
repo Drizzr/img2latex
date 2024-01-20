@@ -84,12 +84,10 @@ class Trainer(object):
             val_loss = self.validate()
             self.val_losses.append(val_loss)
 
-
-            
             self.epoch += 1
             self.step = 0
 
-            self.save_model()
+            self.save_model(epoch=True)
 
     def validate(self):
 
@@ -110,9 +108,9 @@ class Trainer(object):
         ))
         return avg_loss
 
-    def save_model(self):
+    def save_model(self, epoch=False):
         print("saving model...")
-        path = "checkpoints" + "/" + f"chechpoint_epoch_{self.epoch}_{round(self.step/len(self.dataset)*100, 3)}%_estimated_loss_{round(float(self.losses[-1]), 3)}"
+        path = "checkpoints" + "/" + f"chechpoint_epoch_{self.epoch}_{round(self.step/len(self.dataset)*100, 3)}%_estimated_loss_{round(float(self.losses[-1]), 3) if not epoch else round(float(self.val_losses[-1]), 3)}"
         if not os.path.exists(path= path):
             os.makedirs(path)
         
