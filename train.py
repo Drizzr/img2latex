@@ -1,85 +1,161 @@
-from models import CNN_Encoder, RNN_Decoder
-from data.utils import load_image, calc_max_length, map_func, load_data
-import tensorflow as tf
+import argparse
+from data.utils.vocab import Vocabulary
 from data_loader import create_dataset
+from model import Img2LaTex_model, Trainer, LatexProducer
+import tensorflow as tf
 import time
+import sys
+import json
+import os
+
+def build_model(model, formula_len):
+    # generate input to call method
+    start_time = time.time()
+    x = tf.random.uniform((1, 480, 96, 1))
+    formula = tf.random.uniform((1, formula_len))
+    model(x, formula)
+    print("successfully built model...")
+    print("time to build model: ", round(time.time() - start_time, 4), "s")
+    return model
 
 
-embedding_dim = 256
-units = 512
-vocab_size = vocab_size
-num_steps = len(train_X) // BATCH_SIZE
-# Shape of the vector extracted from InceptionV3 is (64, 2048)
-# These two variables represent that vector shape
-features_shape = 2048
-attention_features_shape = 64
+def load_from_checkpoint(save_dir, args, vocab, dataset, val_dataset):
+    """Load model from checkpoint"""
+    print("loading model from checkpoint...")
+    with open(os.path.join(save_dir, "params.json"), "r") as f:
+        params = json.load(f)
 
-encoder = CNN_Encoder(embedding_dim)
-decoder = RNN_Decoder(embedding_dim, units, vocab_size)
+    vocab_size = vocab.n_tokens
 
-optimizer = tf.keras.optimizers.Adam()
-loss_object = tf.keras.losses.SparseCategoricalCrossentropy(
-    from_logits=True, reduction='none')
+    model = Img2LaTex_model(embedding_dim=params["embedding_dim"], enc_out_dim=params["enc_out_dim"], vocab_size=vocab_size,
+                            attention_head_size=params["attention_head_size"], encoder_units=params["encoder_units"],
+                            decoder_units=params["decoder_units"],)
+    
+    
+    model = build_model(model, 152)
 
-def loss_function(real, pred):
-  mask = tf.math.logical_not(tf.math.equal(real, 0))
-  loss_ = loss_object(real, pred)
+    model.load_weights(os.path.join(save_dir, "weights.h5"))
+    print("model loaded successfully...")
 
-  mask = tf.cast(mask, dtype=loss_.dtype)
-  loss_ *= mask
+    trainer = Trainer(model, dataset, args, val_dataset, init_epoch=params["epoch"], vocab_size=vocab_size, last_epoch=args.num_epochs)
 
-  return tf.reduce_mean(loss_)
+    current_batch_size = args.batch_size
+    checkpoint_batch_size = params["batch_size"]
 
-loss_plot = []
-@tf.function
-def train_step(img_tensor, target):
-  loss = 0
 
-  # initializing the hidden state for each batch
-  # because the captions are not related from image to image
-  hidden = decoder.reset_state(batch_size=target.shape[0])
+    trainer.step = params["step"] * (checkpoint_batch_size // current_batch_size)
 
-  dec_input = tf.expand_dims([tokenizer.word_index['startseq']] * target.shape[0], 1)
+    return trainer, model
+    
 
-  with tf.GradientTape() as tape:
-      features = encoder(img_tensor)
+def main():
 
-      for i in range(1, target.shape[1]):
-          # passing the features through the decoder
-          predictions, hidden, _ = decoder(dec_input, features, hidden)
+    # get args
+    parser = argparse.ArgumentParser(description="Train the model.")
 
-          loss += loss_function(target[:, i], predictions)
+    # model args
+    parser.add_argument("--embedding_dim", type=int, default=80)
 
-          # using teacher forcing
-          dec_input = tf.expand_dims(target[:, i], 1)
+    parser.add_argument("--decoder_units", type=int, default=64, help="size of the lstm hidden state")
 
-  total_loss = (loss / int(target.shape[1]))
+    parser.add_argument("--enc_out_dim", type=int, default=64, help="size of the encoder output")
 
-  trainable_variables = encoder.trainable_variables + decoder.trainable_variables
+    parser.add_argument("--encoder_units", type=int, default=64, help="size of the lstm hidden state")
 
-  gradients = tape.gradient(loss, trainable_variables)
+    parser.add_argument("--attention_head_size", type=int, default=32, help="size of the lstm hidden state")
 
-  optimizer.apply_gradients(zip(gradients, trainable_variables))
+    parser.add_argument("--max_len", type=int, default=512, help="size of the token length")
 
-  return loss, total_loss
+    parser.add_argument("--dropout", type=float, default=0.5, help="dropout rate")
 
-import time
-start_epoch = 0
-EPOCHS = 20
+    parser.add_argument("--num_epochs", type=int, default=15, help="number of epochs")
 
-for epoch in range(start_epoch, EPOCHS):
-    start = time.time()
-    total_loss = 0
+    parser.add_argument("--batch_size", type=int, default=12)
 
-    for (batch, (img_tensor, target)) in enumerate(dataset):
-        batch_loss, t_loss = train_step(img_tensor, target)
-        total_loss += t_loss
+    parser.add_argument("--print_freq", type=int, default=1)
 
-        if batch % 100 == 0:
-            average_batch_loss = batch_loss.numpy()/int(target.shape[1])
-            print(f'Epoch {epoch+1} Batch {batch} Loss {average_batch_loss:.4f}')
-    # storing the epoch end loss value to plot later
-    loss_plot.append(total_loss / num_steps)
+    parser.add_argument("--sample_method", type=str, default="exp",
+                        choices=('exp', 'inv_sigmoid', "teacher_forcing"),
+                        help="The method to schedule sampling")
+    
+    parser.add_argument("--decay_k", type=float, default=0.002,) 
 
-    print(f'Epoch {epoch+1} Loss {total_loss/num_steps:.6f}')
-    print(f'Time taken for 1 epoch {time.time()-start:.2f} sec\n')
+
+    parser.add_argument("--from_check_point", action='store_true',
+                        default=False, help="Training from checkpoint or not")
+    
+    parser.add_argument("--clip", type=float, default=5.0, help="gradient clipping")
+
+    parser.add_argument("--lr", type=float, default=3*10**(-4), help="learning rate")
+
+    parser.add_argument("--lr_decay", type=float, default=0.5, help="learning rate decay")
+
+    parser.add_argument("--save_dir", type=str, default="checkpoints/", help="directory to save model")
+
+    args = parser.parse_args()
+
+    from_check_point = args.from_check_point
+    
+    
+    print("_________________________________________________________________")
+    print("HYPERPARAMETERS: ")
+    for arg in vars(args):
+        print(arg,": ", getattr(args, arg))
+    print("_________________________________________________________________")
+    # load vocab
+    vocab = Vocabulary("data/vocab.txt")
+
+    vocab_size = vocab.n_tokens
+
+    dataset = create_dataset(batch_size=args.batch_size, vocab=vocab, type="train")
+
+    val_dataset = create_dataset(batch_size=args.batch_size, vocab=vocab, type="validate")
+
+    """for element in dataset2:
+        if element[1].shape[1] != 152:
+            print("found one")
+    
+    print(vocab_size)"""
+        
+    
+
+    print("sucessfully loaded dataset...")
+
+    if from_check_point:
+        trainer, model = load_from_checkpoint(args.save_dir, args, vocab, dataset, val_dataset)
+    
+    else:
+        model = Img2LaTex_model(args.embedding_dim, enc_out_dim=args.enc_out_dim, vocab_size=vocab_size, 
+                                attention_head_size=args.attention_head_size, encoder_units=args.encoder_units,
+                                decoder_units=args.decoder_units, dropout=args.dropout)
+
+        model = build_model(model, 152)
+
+        trainer = Trainer(model, dataset, args, val_dataset, vocab_size)
+    
+    print("_________________________________________________________________")
+    print("MODEL SUMMARY 🍆: ")
+    model.summary()
+
+    print("begin training... 🥵")
+    print(f"expected loss for random guessing: {-tf.math.log(1/vocab_size)}")
+    print("_________________________________________________________________")
+
+    try:
+        trainer.train()
+    except KeyboardInterrupt as e:
+        print(e)
+        
+        trainer.save_model()
+        
+        sys.exit()
+
+
+
+
+if __name__ == "__main__":
+    main()
+
+
+
+
