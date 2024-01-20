@@ -134,6 +134,11 @@ class Trainer(object):
             json.dump(params, f)
         
         self.model.save_weights(os.path.join(path, "weights.h5"))
+        
+        if self.args.save_keras == True:
+            self.model.save(os.path.join(path, "model.keras"))
+        
+        
 
         print("model saved successfully...")
 

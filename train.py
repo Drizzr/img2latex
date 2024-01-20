@@ -91,6 +91,8 @@ def main():
     parser.add_argument("--lr_decay", type=float, default=0.5, help="learning rate decay")
 
     parser.add_argument("--save_dir", type=str, default="checkpoints/", help="directory to save model")
+    
+    parser.add_argument("--save_keras", action='store_true', default=False, help="save model in keras format")
 
     args = parser.parse_args()
 
@@ -149,8 +151,6 @@ def main():
         trainer.save_model()
         
         sys.exit()
-
-
 
 
 if __name__ == "__main__":
