@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 plt.rcParams['text.usetex'] = True
 
 
-PATH = "checkpoints/chechpoint_epoch_16_0.0%_estimated_loss_0.347"
+PATH = "checkpoints/chechpoint_epoch_41_0.0%_estimated_loss_0.287"
 
 # load params
 parser = argparse.ArgumentParser(description="Play with the model.")
