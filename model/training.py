@@ -89,11 +89,14 @@ class Trainer(object):
 
             self.save_model(epoch=True)
 
-    def validate(self):
+    def validate(self, limit=2000):
 
         val_total_loss = 0.0
+        i = 0
         mes = "Epoch {}, validation average loss:{:.4f}, Perplexity:{:.4f}"
         for imgs, target in self.val_dataset:
+            if i == limit:
+                break
             imgs = imgs
             tgt4training = target[:, :-1] # remove <eos>
             tgt4cal_loss = target[:, 1:] # remove <sos>
@@ -102,7 +105,8 @@ class Trainer(object):
             tgt4cal_loss = tf.one_hot(tf.cast(tgt4cal_loss, dtype=tf.int32), axis=-1, depth=logits.shape[-1])
             loss = self.loss_fn(tgt4cal_loss, logits)
             val_total_loss += loss
-        avg_loss = val_total_loss / len(self.val_dataset)
+            i += 1
+        avg_loss = val_total_loss / limit
         print(mes.format(
             self.epoch, avg_loss, 2**avg_loss
         ))

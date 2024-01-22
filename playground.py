@@ -56,7 +56,7 @@ else:
     for imgs, formulas in dataset:
         print("_______________________________________________________________________________________________")
         gen._print_target_sequence(tf.squeeze(formulas).numpy())
-        print("beam_search: ", gen._beam_search(imgs, beam_width=10))
+        print("beam_search: ", gen._beam_search(imgs, beam_width=2))
         print("greedy_search: ", gen._greedy_decoding(imgs))
         print("_______________________________________________________________________________________________")
         
