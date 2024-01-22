@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 plt.rcParams['text.usetex'] = True
 
 
-PATH = "checkpoints/chechpoint_epoch_28_0.0%_estimated_loss_0.16"
+PATH = "checkpoints/chechpoint_epoch_41_0.0%_estimated_loss_0.287"
 
 # load params
 parser = argparse.ArgumentParser(description="Play with the model.")
@@ -43,6 +43,7 @@ gen = LatexProducer(model, vocab, max_len=150)
 if args.render:
     for imgs, formulas in dataset:
         print("_______________________________________________________________________________________________")
+        print("rendering formula: ")
         gen._print_target_sequence(tf.squeeze(formulas).numpy())
         generatedSequence = gen._greedy_decoding(imgs)
         print("greedy_search: ", generatedSequence)

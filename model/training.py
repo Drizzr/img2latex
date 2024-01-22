@@ -5,7 +5,7 @@ import numpy as np
 import time
 from .inference import  LatexProducer
 import json
-import tensorflowjs as tfjs
+#import tensorflowjs as tfjs
 
 class Trainer(object):
     def __init__(self, model,
@@ -138,7 +138,7 @@ class Trainer(object):
         
         if self.args.save_keras == True:
             self.model.save(os.path.join(path, "model.keras"))
-            tfjs.converters.save_keras_model(self.model, os.path.join(path, "model.tfjs"))
+            #tfjs.converters.save_keras_model(self.model, os.path.join(path, "model.tfjs"))
         
         
 

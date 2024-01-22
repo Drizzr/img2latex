@@ -124,13 +124,10 @@ class CrossAttention(keras.layers.Layer):
 
     @tf.function
     def call(self, x, context):
-
         attn_output, attn_scores = self.mha(
             query=x,
             value=context,
             return_attention_scores=True)
-        
-        
         x = self.add([x, attn_output])
         x = self.layer_norm(x)  # residual connection
         return x 
