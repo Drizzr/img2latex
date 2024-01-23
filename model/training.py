@@ -83,18 +83,19 @@ class Trainer(object):
             val_loss = self.validate()
             self.val_losses.append(val_loss)
 
-
-            
             self.epoch += 1
             self.step = 0
 
-            self.save_model()
+            self.save_model(epoch=True)
 
-    def validate(self):
+    def validate(self, limit=2000):
 
         val_total_loss = 0.0
+        i = 0
         mes = "Epoch {}, validation average loss:{:.4f}, Perplexity:{:.4f}"
         for imgs, target in self.val_dataset:
+            if i == limit:
+                break
             imgs = imgs
             tgt4training = target[:, :-1] # remove <eos>
             tgt4cal_loss = target[:, 1:] # remove <sos>
@@ -103,15 +104,16 @@ class Trainer(object):
             tgt4cal_loss = tf.one_hot(tf.cast(tgt4cal_loss, dtype=tf.int32), axis=-1, depth=logits.shape[-1])
             loss = self.loss_fn(tgt4cal_loss, logits)
             val_total_loss += loss
-        avg_loss = val_total_loss / len(self.val_dataset)
+            i += 1
+        avg_loss = val_total_loss / limit
         print(mes.format(
             self.epoch, avg_loss, 2**avg_loss
         ))
         return avg_loss
 
-    def save_model(self):
+    def save_model(self, epoch=False):
         print("saving model...")
-        path = "checkpoints" + "/" + f"chechpoint_epoch_{self.epoch}_{round(self.step/len(self.dataset)*100, 3)}%_estimated_loss_{round(float(self.losses[-1]), 3)}"
+        path = "checkpoints" + "/" + f"chechpoint_epoch_{self.epoch}_{round(self.step/len(self.dataset)*100, 3)}%_estimated_loss_{round(float(self.losses[-1]), 3) if not epoch else round(float(self.val_losses[-1]), 3)}"
         if not os.path.exists(path= path):
             os.makedirs(path)
         
