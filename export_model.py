@@ -2,7 +2,7 @@ import tensorflow as tf
 from tensorflow import keras
 from model.model import Img2LaTex_model
 from data.utils import Vocabulary
-
+import tensorflowjs as tfjs
 
 """
 A Wrapper class to export the model to a tensorflow serving model.
@@ -52,6 +52,8 @@ if __name__ == "__main__":
 
     tf.saved_model.save(export, 'Img2Latex_exported',
                     signatures={'serving_default': export.generate})
+    
+    tfjs.converters.convert_tf_saved_model('Img2Latex_exported', 'Img2Latex_js_exported', control_flow_v2=True)
 
     
     """model = tf.saved_model.load("Img2Latex")
