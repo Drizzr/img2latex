@@ -1,7 +1,6 @@
 import argparse
 from data.utils.vocab import Vocabulary
-from data_loader import create_dataset
-from model import Img2LaTex_model, Trainer, LatexProducer
+from model import Img2LaTex_model, Trainer, create_dataset
 import tensorflow as tf
 import time
 import sys

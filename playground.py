@@ -1,8 +1,7 @@
 import tensorflow as tf
-from model import Img2LaTex_model, Trainer, LatexProducer
+from model import Img2LaTex_model, LatexProducer, create_dataset
 import json
 from data.utils import Vocabulary
-from data_loader import create_dataset
 import argparse
 import matplotlib.pyplot as plt
 
@@ -42,6 +41,9 @@ gen = LatexProducer(model, vocab, max_len=150)
 
 if args.render:
     for imgs, formulas in dataset:
+        print(imgs.shape)
+        model2 = tf.saved_model.load("Img2Latex_exported")
+        print(model2.generate(imgs))
         print("_______________________________________________________________________________________________")
         gen._print_target_sequence(tf.squeeze(formulas).numpy())
         generatedSequence = gen._greedy_decoding(imgs)
