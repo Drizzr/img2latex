@@ -16,7 +16,6 @@ class Export(tf.Module):
     @tf.function(input_signature=[tf.TensorSpec(shape=[1, 96, 480, 1], dtype=tf.float32)])
     def generate(self, imgs, max_len=150):
 
-
         tgt = tf.ones((1, 1), dtype=tf.int32) * 3
         
         # greedy decoding
@@ -53,6 +52,7 @@ if __name__ == "__main__":
 
     tf.saved_model.save(export, 'Img2Latex_exported',
                     signatures={'serving_default': export.generate})
+
     
     """model = tf.saved_model.load("Img2Latex")
 
