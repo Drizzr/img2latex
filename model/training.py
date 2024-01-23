@@ -57,8 +57,6 @@ class Trainer(object):
 
                     self.step += 1
                     self.total_step += 1
-                    
-
                 
                 losses += step_loss
 
