@@ -10,7 +10,7 @@ import os
 def build_model(model, formula_len):
     # generate input to call method
     start_time = time.time()
-    x = tf.random.uniform((1, 480, 96, 1))
+    x = tf.random.uniform((1, 96, 480, 1))
     formula = tf.random.uniform((1, formula_len))
     model(x, formula)
     print("successfully built model...")

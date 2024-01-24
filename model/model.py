@@ -69,7 +69,6 @@ class Img2LaTex_model(keras.Model):
     
 
         
-    @tf.function
     def encode(self, imgs):
         # input size: [B, W, H, C] in our case [Batch_size, 480, 96, 1]
         x = self.cnn_encoder(imgs)
@@ -85,8 +84,6 @@ class Img2LaTex_model(keras.Model):
 
         return x
     
-
-    @tf.function
     def decode(self, encoded_imgs, formulas, state=None):
 
         embeddings = self.embedding(formulas) # -> (batch_size, max_len, embedding_dim)
