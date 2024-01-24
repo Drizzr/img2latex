@@ -1,15 +1,14 @@
 import tensorflow as tf
-from model import Img2LaTex_model, Trainer, LatexProducer
+from model import Img2LaTex_model, LatexProducer, create_dataset
 import json
 from data.utils import Vocabulary
-from data_loader import create_dataset
 import argparse
 import matplotlib.pyplot as plt
 
 plt.rcParams['text.usetex'] = True
 
 
-PATH = "checkpoints/chechpoint_epoch_28_0.0%_estimated_loss_0.16"
+PATH = "checkpoints/chechpoint_epoch_41_0.0%_estimated_loss_0.287"
 
 # load params
 parser = argparse.ArgumentParser(description="Play with the model.")
@@ -28,8 +27,8 @@ model = Img2LaTex_model(embedding_dim=params["embedding_dim"], enc_out_dim=param
                         attention_head_size=params["attention_head_size"], encoder_units=params["encoder_units"],
                         decoder_units=params["decoder_units"],)
 
-x = tf.random.uniform((1, 480, 96, 1))
-formula = tf.random.uniform((1, 150))
+x = tf.random.uniform((1, 96, 480, 1))
+formula = tf.random.uniform((1, 1))
 model(x, formula)
 
 model.load_weights(PATH + "/weights.h5")
@@ -39,9 +38,11 @@ model.load_weights(PATH + "/weights.h5")
 dataset = create_dataset(vocab=vocab, batch_size=1, type="validate")
 
 gen = LatexProducer(model, vocab, max_len=150)
-
+#model2 = tf.saved_model.load("Img2Latex_exported")
 if args.render:
     for imgs, formulas in dataset:
+        
+        #print(model2.generate(imgs))
         print("_______________________________________________________________________________________________")
         gen._print_target_sequence(tf.squeeze(formulas).numpy())
         generatedSequence = gen._greedy_decoding(imgs)
@@ -56,7 +57,7 @@ else:
     for imgs, formulas in dataset:
         print("_______________________________________________________________________________________________")
         gen._print_target_sequence(tf.squeeze(formulas).numpy())
-        print("beam_search: ", gen._beam_search(imgs, beam_width=10))
+        print("beam_search: ", gen._beam_search(imgs, beam_width=2))
         print("greedy_search: ", gen._greedy_decoding(imgs))
         print("_______________________________________________________________________________________________")
         

@@ -11,12 +11,6 @@ class LatexProducer():
         self.max_len = max_len
     
 
-    def predict(self, img):
-        # implement beam search
-        return self._greedy_decoding(img)
-    
-
-
     def _greedy_decoding(self, img):
         """Greedy Decoding"""
         # encode

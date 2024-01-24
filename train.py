@@ -1,7 +1,6 @@
 import argparse
 from data.utils.vocab import Vocabulary
-from data_loader import create_dataset
-from model import Img2LaTex_model, Trainer, LatexProducer
+from model import Img2LaTex_model, Trainer, create_dataset
 import tensorflow as tf
 import time
 import sys
@@ -11,7 +10,7 @@ import os
 def build_model(model, formula_len):
     # generate input to call method
     start_time = time.time()
-    x = tf.random.uniform((1, 480, 96, 1))
+    x = tf.random.uniform((1, 96, 480, 1))
     formula = tf.random.uniform((1, formula_len))
     model(x, formula)
     print("successfully built model...")

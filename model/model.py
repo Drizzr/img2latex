@@ -48,8 +48,7 @@ class Img2LaTex_model(keras.Model):
 
         self.output_layer = keras.layers.Dense(vocab_size, activation='softmax')
 
-
-        
+    @tf.function        
     def call(self, imgs, formulas, state=None, return_state=False):
         """
         imgs: [B, W, H, C] in our case [Batch_size, 480, 96, 1]
@@ -70,7 +69,6 @@ class Img2LaTex_model(keras.Model):
     
 
         
-    @tf.function
     def encode(self, imgs):
         # input size: [B, W, H, C] in our case [Batch_size, 480, 96, 1]
         x = self.cnn_encoder(imgs)
@@ -78,16 +76,14 @@ class Img2LaTex_model(keras.Model):
 
         # flatten last two dimensions
         B, W, H, C = x.shape
-        x = tf.reshape(x, (B, W*H, C)) #-> (batch_size, W' * H', 256)
-
+        #x = tf.reshape(x, (B, W*H, C)) #-> (batch_size, W' * H', 256)
+        x = tf.keras.layers.Reshape((W*H, C))(x)
         x  = self.encoder_rnn(x) # -> (batch_size, W' * H', 2*encoder_units)
 
         x = self.dropout(x)
 
         return x
     
-
-    @tf.function
     def decode(self, encoded_imgs, formulas, state=None):
 
         embeddings = self.embedding(formulas) # -> (batch_size, max_len, embedding_dim)
