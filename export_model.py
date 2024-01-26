@@ -16,6 +16,13 @@ class Export(tf.Module):
     @tf.function(input_signature=[tf.TensorSpec(shape=[1, 96, 480, 1], dtype=tf.float32)])
     def generate(self, imgs, max_len=150):
 
+        """
+        Args: 
+            imgs: a tensor of shape (1, 96, 480, 1)
+            max_len: maximum length of the generated formula
+        Returns:
+            a tensor of shape (max_len,) containing the ids of the generated formula
+        """
 
         tgt = tf.ones((1, 1), dtype=tf.int32) * 3
         

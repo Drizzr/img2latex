@@ -48,7 +48,7 @@ class Img2LaTex_model(keras.Model):
 
         self.output_layer = keras.layers.Dense(vocab_size, activation='softmax')
 
-    @tf.function        
+    @tf.function(reduce_retracing=True)      
     def call(self, imgs, formulas, state=None, return_state=False):
         """
         imgs: [B, W, H, C] in our case [Batch_size, 480, 96, 1]
