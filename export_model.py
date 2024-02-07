@@ -2,6 +2,7 @@ import tensorflow as tf
 from tensorflow import keras
 from model.model import Img2LaTex_model
 from data.utils import Vocabulary
+import tensorflowjs as tfjs
 
 
 """
@@ -16,6 +17,13 @@ class Export(tf.Module):
     @tf.function(input_signature=[tf.TensorSpec(shape=[1, 96, 480, 1], dtype=tf.float32)])
     def generate(self, imgs, max_len=150):
 
+        """
+        Args: 
+            imgs: a tensor of shape (1, 96, 480, 1)
+            max_len: maximum length of the generated formula
+        Returns:
+            a tensor of shape (max_len,) containing the ids of the generated formula
+        """
 
         tgt = tf.ones((1, 1), dtype=tf.int32) * 3
         
@@ -53,6 +61,8 @@ if __name__ == "__main__":
 
     tf.saved_model.save(export, 'Img2Latex_exported',
                     signatures={'serving_default': export.generate})
+    
+    #tfjs.converters.convert_tf_saved_model('Img2Latex_exported', 'Img2Latex_js_exported', control_flow_v2=True)
     
     """model = tf.saved_model.load("Img2Latex")
 

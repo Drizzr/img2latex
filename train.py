@@ -72,13 +72,8 @@ def main():
     parser.add_argument("--batch_size", type=int, default=12)
 
     parser.add_argument("--print_freq", type=int, default=1)
-
-    parser.add_argument("--sample_method", type=str, default="exp",
-                        choices=('exp', 'inv_sigmoid', "teacher_forcing"),
-                        help="The method to schedule sampling")
     
     parser.add_argument("--decay_k", type=float, default=0.002,) 
-
 
     parser.add_argument("--from_check_point", action='store_true',
                         default=False, help="Training from checkpoint or not")
@@ -86,8 +81,6 @@ def main():
     parser.add_argument("--clip", type=float, default=5.0, help="gradient clipping")
 
     parser.add_argument("--lr", type=float, default=3*10**(-4), help="learning rate")
-
-    parser.add_argument("--lr_decay", type=float, default=0.5, help="learning rate decay")
 
     parser.add_argument("--save_dir", type=str, default="checkpoints/", help="directory to save model")
 
