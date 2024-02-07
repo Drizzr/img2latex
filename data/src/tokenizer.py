@@ -11,8 +11,7 @@ os.chdir(dname)
 
 MAX_LENGTH = 150 #Maximum length of the formulas
 
-dataFilesPath = "../" #Path to the folder where all data files are stored
-vocabFile = open(dataFilesPath + "vocab.txt", "r")
+vocabFile = open("../vocab.txt", "r")
 datasets = ["im2latex_train", "im2latex_test", "im2latex_validate"]
 
 plotFormularLengths = True #Plot the lengths of the formulas to analyze the dataset
@@ -36,9 +35,9 @@ def create_stoi(list):
 stoi = create_stoi(vocabFile.readlines())
 
 for dataset in datasets:
-    df = pd.read_csv(dataFilesPath + dataset + ".csv")
+    df = pd.read_csv("../../archive/" + dataset + ".csv")
 
-    with open(dataFilesPath + "tokenized_data/" + dataset + "_tokenized.csv", "w") as file:
+    with open("/Users/samuelfriese/Desktop/Projekte/img2latex/data/tokenized_data" + dataset + "_tokenized.csv", "w") as file:
         file.write("formula;image_path\n")
         for _ , row  in df.iterrows():
                 tokenize_formula = []

@@ -20,13 +20,13 @@ class Img2LaTex_model(keras.Model):
                 keras.layers.Conv2D(filters = 256, kernel_size = (3, 3), activation='relu', padding='same'),
                 # (batch_size, W/4, W/4, 256)
                 keras.layers.MaxPooling2D(pool_size=(2, 2), strides=2),
-                # (batch_size, 60, 12, 256)
+                # (batch_size, W/8, H/8, 256)
                 keras.layers.Conv2D(filters = enc_out_dim, kernel_size = (3, 3), activation='relu', padding='same'),
-                # (batch_size, 60, 12, 256)
+                # (batch_size, W/8, H/8, enc_out_dim)
                 keras.layers.MaxPooling2D(pool_size=(2, 1))
-                # (batch_size, 30, 12, 256)
+                # (batch_size, W/16, H/8, 256)
             ])
-        # -> output shape: (batch_size, 60, 24, enc_out_dim) or more generally (batch_size, W', H', enc_out_dim)
+        # -> output shape: (batch_size, 6, 60, enc_out_dim) or more generally (batch_size, W', H', enc_out_dim)
 
 
 
@@ -59,7 +59,7 @@ class Img2LaTex_model(keras.Model):
         
         returns: logits (B, Max_len, Vocab_size)
         """
-        encoded_imgs = self.encode(imgs) # -> (batch_size, 360, 512)
+        encoded_imgs = self.encode(imgs) # -> (batch_size, 6*60, enc_out_dim)
         
         logits, state = self.decode(encoded_imgs, formulas, state=state)
 
@@ -72,13 +72,15 @@ class Img2LaTex_model(keras.Model):
     def encode(self, imgs):
         # input size: [B, W, H, C] in our case [Batch_size, 480, 96, 1]
         x = self.cnn_encoder(imgs)
-        # -> output shape: (batch_size, 30, 12, 256) or more generally (batch_size, W', H', 256)
+
+        # -> output shape: (batch_size, W', H', enc_out_dim)
 
         # flatten last two dimensions
         B, W, H, C = x.shape
-        #x = tf.reshape(x, (B, W*H, C)) #-> (batch_size, W' * H', 256)
+        #x = tf.reshape(x, (B, W*H, C)) #-> (batch_size, W' * H', enc_out_dim)
         x = tf.keras.layers.Reshape((W*H, C))(x)
-        x  = self.encoder_rnn(x) # -> (batch_size, W' * H', 2*encoder_units)
+
+        x  = self.encoder_rnn(x) # -> (batch_size, W' * H', encoder_units)
 
         x = self.dropout(x)
 
