@@ -165,6 +165,7 @@ Further work on data augmentation, model fine-tuning, and improvements in attent
 ### 4. **LatexProducer**
 
 - Generates LaTeX sequences during inference using either greedy decoding or beam search. It also supports rendering of the predicted formulas.
+- For a smaller, standalone repository focused just on inference, you can check out the [Img2Latex Generator](https://github.com/Drizzr/Img2Latex_generator).
 
 ---
 
@@ -177,13 +178,6 @@ Further work on data augmentation, model fine-tuning, and improvements in attent
 ---
 
 ## Requirements
-
-- Python 3.x
-- TensorFlow
-- Matplotlib
-- Numpy
-- Json
-
 Install dependencies:
 
 ```bash
@@ -198,4 +192,3 @@ The **Img2LaTeX** model offers a robust approach for converting LaTeX formula im
 
 ```
 
-This markdown structure includes all the necessary sections and leaves room for adding specific examples of how the model works. You can replace the **Examples** section with actual input/output images and LaTeX code to show the model's functionality.
