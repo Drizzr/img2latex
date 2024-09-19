@@ -98,15 +98,13 @@ Here’s a styled and expanded version of the **Examples** section, along with s
 
 ## Examples
 
-Below are a few examples of the **Img2LaTeX** model in action, showcasing its ability to convert images of LaTeX formulas into their corresponding LaTeX code. While the model performs well on the training and validation datasets, it may struggle with unseen images or those that differ significantly from the dataset it was trained on.
+Below are a few examples of the **Img2LaTeX** model in action, showcasing its ability to convert images of LaTeX formulas into their corresponding LaTeX code (top image shows the rendered formula based on the model output). While the model performs well on the training and validation datasets, it may struggle with unseen images or those that differ significantly from the dataset it was trained on.
 
 ### Example 1: Formula from the Validation Set
 In this case, the model successfully recognizes the structure of the LaTeX formula and generates an accurate output.
 
 ![Validation Formula](https://github.com/user-attachments/assets/d20f5be0-ba69-4208-9fda-d21c7cfa62e3)
-```latex
-y = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}
-```
+
 
 ---
 
@@ -114,9 +112,7 @@ y = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}
 This example shows the model’s capability to handle more complex LaTeX formulas, demonstrating its effectiveness in generating multi-step expressions.
 
 ![Complex Formula](https://github.com/user-attachments/assets/937e8ff9-15a4-4887-815c-3798a40a2a88)
-```latex
-\int_{a}^{b} f(x) dx = F(b) - F(a)
-```
+
 
 ---
 
