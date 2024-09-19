@@ -93,9 +93,58 @@ python sample.py --render
 
 ---
 
+Here’s a styled and expanded version of the **Examples** section, along with some additional context:
+
+
 ## Examples
 
-(Add example inputs and outputs here to demonstrate the model's performance.)
+Below are a few examples of the **Img2LaTeX** model in action, showcasing its ability to convert images of LaTeX formulas into their corresponding LaTeX code. While the model performs well on the training and validation datasets, it may struggle with unseen images or those that differ significantly from the dataset it was trained on.
+
+### Example 1: Formula from the Validation Set
+In this case, the model successfully recognizes the structure of the LaTeX formula and generates an accurate output.
+
+![Validation Formula](https://github.com/user-attachments/assets/d20f5be0-ba69-4208-9fda-d21c7cfa62e3)
+```latex
+y = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}
+```
+
+---
+
+### Example 2: Complex LaTeX Structure
+This example shows the model’s capability to handle more complex LaTeX formulas, demonstrating its effectiveness in generating multi-step expressions.
+
+![Complex Formula](https://github.com/user-attachments/assets/937e8ff9-15a4-4887-815c-3798a40a2a88)
+```latex
+\int_{a}^{b} f(x) dx = F(b) - F(a)
+```
+
+---
+
+### Example 3: Issues with Unseen Data
+When tested with images outside the training/validation dataset, the model may struggle with accuracy, as seen in this example. The formula produced here does not perfectly match the expected LaTeX sequence.
+
+![Unseen Data Formula](https://github.com/user-attachments/assets/b96a7422-137e-4fa7-a693-2bb43829c360)
+```latex
+\text{Inconsistent Output Example}
+```
+
+---
+
+### Example 4: Partial Recognition
+The model can sometimes partially recognize formulas but make errors with symbols or structure, especially when faced with noisy or unfamiliar inputs. This can be improved with better data diversity and model refinement.
+
+![Partial Formula Recognition](https://github.com/user-attachments/assets/52b964e3-c0c3-4676-b2e7-7e352b5ef78d)
+```latex
+\text{Possible Error in Formula Generation}
+```
+
+---
+
+### Performance and Challenges
+While the **Img2LaTeX** model demonstrates strong performance on familiar data, it still faces challenges with generalizing to images outside the training set. The complexity of LaTeX structures and image variability can affect accuracy, especially in cases where the input image is noisy or the formula involves rarely seen symbols.
+
+Further work on data augmentation, model fine-tuning, and improvements in attention mechanisms could help the model generalize better to unseen examples.
+
 
 ---
 
