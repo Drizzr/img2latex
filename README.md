@@ -182,5 +182,5 @@ pip install -r requirements.txt
 
 The **Img2LaTeX** model offers a robust approach for converting LaTeX formula images into LaTeX code. With its hybrid CNN-RNN structure and cross-attention mechanism, the model captures both spatial and sequential information effectively. The model performs well on the **Img2LaTeX100k** dataset, and future improvements aim to expand its usability in browser-based applications.
 
-```
+
 
