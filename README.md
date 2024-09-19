@@ -124,9 +124,7 @@ This example shows the model’s capability to handle more complex LaTeX formula
 When tested with images outside the training/validation dataset, the model may struggle with accuracy, as seen in this example. The formula produced here does not perfectly match the expected LaTeX sequence.
 
 ![Unseen Data Formula](https://github.com/user-attachments/assets/b96a7422-137e-4fa7-a693-2bb43829c360)
-```latex
-\text{Inconsistent Output Example}
-```
+
 
 ---
 
@@ -134,9 +132,7 @@ When tested with images outside the training/validation dataset, the model may s
 The model can sometimes partially recognize formulas but make errors with symbols or structure, especially when faced with noisy or unfamiliar inputs. This can be improved with better data diversity and model refinement.
 
 ![Partial Formula Recognition](https://github.com/user-attachments/assets/52b964e3-c0c3-4676-b2e7-7e352b5ef78d)
-```latex
-\text{Possible Error in Formula Generation}
-```
+
 
 ---
 
