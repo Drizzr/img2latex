@@ -16,6 +16,8 @@ class LatexProducer():
         # encode
 
         tgt = tf.ones((1, 1), dtype=tf.int32) * self.vocab.tok_to_id["<sos>"]
+
+        encoded_img = self.model.encode(img)
         
         # greedy decoding
         formula = []
@@ -24,7 +26,7 @@ class LatexProducer():
 
         for t in range(self.max_len):
             
-            pred_id, state = self._get_next_token(img, tgt, state)
+            pred_id, state = self._get_next_token(encoded_img, tgt, state)
             
             if pred_id == self.vocab.tok_to_id["<eos>"]:
                 break
@@ -55,7 +57,8 @@ class LatexProducer():
 
         beam_scores = tf.reshape(topk_log_probs, (beam_width, 1)) # beam_scores shape (beam_width, 1)
 
-        img = tf.broadcast_to(img, [beam_width, img.shape[1], img.shape[2], img.shape[3]])
+        encoded_img = self.model.encode(img) # encoded_shape (1, 360, 64) 
+        encoded_img = tf.broadcast_to(encoded_img, [beam_width, encoded_img.shape[1], encoded_img.shape[2]])       
 
         finished_beams = []
         finished_beams_scores = []
@@ -63,8 +66,9 @@ class LatexProducer():
 
         for t in range(self.max_len):
 
-            
-            logit = self.model(img, beams, return_state=False, training=False) # logit shape (beam_width, 1, vocab_size)
+            encoded_img = encoded_img[:beams.shape[0], :, :]
+
+            logit, _ = self.model.decode(encoded_img, beams) # logit shape (beam_width, 1, vocab_size)
 
             
             logit = logit[:, -1 , :] # logit shape (beam_width, vocab_size)
@@ -143,10 +147,11 @@ class LatexProducer():
 
 
         
-    def _get_next_token(self, img, prior_token, state, temperature=1.0):
+    def _get_next_token(self, encoded_img, prior_token, state, temperature=1.0):
         """Get the next token"""
         # predict logit
-        logit, state = self.model(img, prior_token, state, return_state=True, training=False)
+
+        logit, state = self.model.decode(encoded_img, prior_token, state)
         
         # sample token
         pred_id = tf.argmax(logit, axis=2).numpy()[0]
